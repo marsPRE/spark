@@ -1,0 +1,19 @@
+{
+  "QRA": { "question": "What is your station name?", "answer": "My station name is..." },
+  "QRG": { "question": "What is my exact frequency?", "answer": "Your frequency is..." },
+  "QRK": { "question": "What is the readability of my signals?", "answer": "Your signals are (1-5)" },
+  "QRL": { "question": "Are you busy?", "answer": "I am busy" },
+  "QRM": { "question": "Are you being interfered with?", "answer": "I am being interfered with" },
+  "QRN": { "question": "Are you troubled by static?", "answer": "I am troubled by static" },
+  "QRQ": { "question": "Shall I send faster?", "answer": "Send faster" },
+  "QRS": { "question": "Shall I send slower?", "answer": "Send slower" },
+  "QRT": { "question": "Shall I stop sending?", "answer": "Stop sending" },
+  "QRV": { "question": "Are you ready?", "answer": "I am ready" },
+  "QRZ": { "question": "Who is calling me?", "answer": "You are being called by..." },
+  "QSA": { "question": "What is my signal strength?", "answer": "Your strength is (1-5)" },
+  "QSL": { "question": "Can you acknowledge receipt?", "answer": "I acknowledge receipt" },
+  "QSO": { "question": "Can you communicate?", "answer": "I can communicate with..." },
+  "QSY": { "question": "Shall I change frequency?", "answer": "Change to... kHz" },
+  "QTH": { "question": "What is your position?", "answer": "My position is..." },
+  "QTR": { "question": "What is the correct time?", "answer": "The time is..." }
+}

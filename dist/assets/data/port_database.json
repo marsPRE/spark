@@ -1,0 +1,7 @@
+[
+  { "name": "Liverpool",   "position": { "lat": 53.4,  "lon": -3.0  }, "country": "UK" },
+  { "name": "Southampton", "position": { "lat": 50.9,  "lon": -1.4  }, "country": "UK" },
+  { "name": "New York",    "position": { "lat": 40.7,  "lon": -74.0 }, "country": "USA" },
+  { "name": "Halifax",     "position": { "lat": 44.6,  "lon": -63.6 }, "country": "Canada" },
+  { "name": "Cork",        "position": { "lat": 51.9,  "lon": -8.5  }, "country": "Ireland" }
+]

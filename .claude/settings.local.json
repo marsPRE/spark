@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"c:/Users/mspre/Documents/code/spark/src/scenes\" \"c:/Users/mspre/Documents/code/spark/src/systems\" \"c:/Users/mspre/Documents/code/spark/src/objects\" \"c:/Users/mspre/Documents/code/spark/src/ui\" \"c:/Users/mspre/Documents/code/spark/src/utils\" \"c:/Users/mspre/Documents/code/spark/src/config\" \"c:/Users/mspre/Documents/code/spark/styles\" \"c:/Users/mspre/Documents/code/spark/public/assets/data/voyages\" \"c:/Users/mspre/Documents/code/spark/C:/Users/mspre/.claude/projects/c--Users-mspre-Documents-code-spark/memory\")",
+      "Bash(mkdir -p \"C:/Users/mspre/.claude/projects/c--Users-mspre-Documents-code-spark/memory\")"
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "id": "voyage_01",
+  "title": "Atlantic Mail",
+  "description": "Your first transatlantic crossing aboard RMS Carpathia.",
+  "year": 1910,
+  "ship": {
+    "name": "SS Pemberton",
+    "callsign": "MPB",
+    "type": "cargo",
+    "operators": 1,
+    "radio_power": "medium",
+    "route": {
+      "departure": { "port": "Liverpool", "position": { "lat": 53.4, "lon": -3.0 } },
+      "arrival":   { "port": "New York",  "position": { "lat": 40.7, "lon": -74.0 } },
+      "waypoints": [
+        { "position": { "lat": 51.8, "lon": -8.3 }, "name": "Fastnet" },
+        { "position": { "lat": 47.5, "lon": -30.0 }, "name": "Mid-Atlantic" }
+      ]
+    }
+  },
+  "duration_days": 7,
+  "difficulty": "JUNIOR",
+  "weather_pattern": [
+    { "day": 1, "conditions": "clear",  "sea_state": 2 },
+    { "day": 2, "conditions": "clear",  "sea_state": 2 },
+    { "day": 3, "conditions": "cloudy", "sea_state": 3 },
+    { "day": 4, "conditions": "storm",  "sea_state": 6 },
+    { "day": 5, "conditions": "fog",    "sea_state": 3 },
+    { "day": 6, "conditions": "clear",  "sea_state": 2 },
+    { "day": 7, "conditions": "clear",  "sea_state": 1 }
+  ],
+  "scheduled_messages": [],
+  "narrative_events": [],
+  "scoring": {
+    "par_score": 500,
+    "gold_threshold": 800,
+    "required_to_pass": 300
+  }
+}
