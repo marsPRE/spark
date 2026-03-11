@@ -93,10 +93,17 @@ export class HUD {
       ...btnStyle, color: '#aabbcc', backgroundColor: '#0e1520',
     }).setInteractive({ useHandCursor: true }).setDepth(32);
     chartBtn.on('pointerover', () => chartBtn.setColor('#ffffff'));
-    chartBtn.on('pointerout',  () => chartBtn.setColor('#aabbcc'));
-    chartBtn.on('pointerup', () => {
-      sc.notifications?.show('Sea chart coming soon', 'info');
+    chartBtn.on('pointerout',  () => {
+      if (!sc.seaChart?._visible) chartBtn.setColor('#aabbcc');
     });
+    chartBtn.on('pointerup', () => {
+      const isVisible = sc.seaChart?.toggle();
+      // Highlight button when chart is visible
+      chartBtn.setColor(isVisible ? '#ffff88' : '#aabbcc');
+    });
+    
+    // Store reference for external updates
+    this._chartBtn = chartBtn;
   }
 
   update(delta) {

@@ -108,11 +108,9 @@ export class Logbook {
     const wpm     = message.timing?.wpm;
     const repeats = message.timing?.repeats || 1;
 
-    // Calculate one-play duration from actual timings
-    const farnMult = this.scene.settings?.farnsworthMultiplier ?? 1.0;
+    // Calculate exact one-play duration from actual timings (same as audio)
     const timings  = this.scene.morseEngine.encodeToTimings(text, wpm);
-    const baseDur  = timings.reduce((s, t) => s + t.duration, 0) + 300;
-    // Farnsworth adds extra gaps — estimate stretched duration
+    const baseDur  = timings.reduce((s, t) => s + t.duration, 0);
     const pauseMs  = this.scene.settings?.repeatPauseMs ?? 2000;
     const playDur  = baseDur + pauseMs;  // full cycle including pause
 
@@ -329,25 +327,34 @@ export class Logbook {
     }
   }
 
-  /** Schedule choice buttons for a single play of the message at `offset` ms. */
+  /** Schedule choice buttons for a single play of the message at `offset` ms.
+   *  Uses EXACT same timings as the audio playback for perfect sync.
+   */
   _scheduleOnePass(text, wpm, offset, isFirstPass) {
-    const effectiveWpm = this.scene.radioSystem?.wpmOverride || wpm || 12;
-    const dit      = 1200 / effectiveWpm;
-    const dah      = 3 * dit;
-    const intra    = dit;
-    const farnMult = this.scene.settings?.farnsworthMultiplier ?? 1.0;
-    const inter    = 3 * dit * farnMult;
-    const wordGap  = 7 * dit * farnMult;
-
-    const chars = text.toUpperCase().split('');
+    // Get exact timings from MorseEngine - same as audio uses
+    const morse = this.scene.morseEngine;
+    const timings = morse.encodeToTimings(text, wpm);
+    
+    // Calculate cumulative time for each character start
     let ms = 0;
     let charIndex = 0;   // tracks position in message (ignoring spaces)
-
+    const chars = text.toUpperCase().split('');
+    
+    // Parse timings to find when each character starts/ends
+    let timingIdx = 0;
+    
     for (let i = 0; i < chars.length; i++) {
       const char = chars[i];
 
       if (char === ' ') {
-        // Auto-insert space on every pass (always automatic, never manual)
+        // Find the word gap duration from timings
+        let wordGapMs = 0;
+        while (timingIdx < timings.length && timings[timingIdx].type === 'gap') {
+          wordGapMs += timings[timingIdx].duration;
+          timingIdx++;
+        }
+        
+        // Auto-insert space on every pass
         const spaceAt = offset + ms;
         this._charTimers.push(setTimeout(() => {
           if (this._mode !== 'decoding') return;
@@ -355,25 +362,55 @@ export class Logbook {
           this._cursorPos = this._typedText.length;
           this._refreshInput();
         }, spaceAt));
-        ms += wordGap;
+        
+        ms += wordGapMs;
         continue;
       }
 
       const pat = MORSE_PAT[char];
-      if (!pat) { ms += dit * 4 + inter; continue; }
-
-      let charDur = 0;
-      for (let j = 0; j < pat.length; j++) {
-        charDur += pat[j] === '.' ? dit : dah;
-        if (j < pat.length - 1) charDur += intra;
+      if (!pat) {
+        // Skip unknown chars
+        while (timingIdx < timings.length && timings[timingIdx].type === 'tone') {
+          ms += timings[timingIdx].duration;
+          timingIdx++;
+          if (timingIdx < timings.length && timings[timingIdx].type === 'gap') {
+            ms += timings[timingIdx].duration;
+            timingIdx++;
+          }
+        }
+        continue;
       }
 
-      const showAt = offset + ms;                 // show immediately when char starts
-      const hideAt = offset + ms + charDur + inter; // hide when next char starts
+      // Calculate exact duration of this character (tones + intra-char gaps)
+      let charStartMs = ms;
+      let charEndMs = ms;
+      
+      for (let j = 0; j < pat.length; j++) {
+        // Tone
+        if (timingIdx < timings.length && timings[timingIdx].type === 'tone') {
+          charEndMs += timings[timingIdx].duration;
+          timingIdx++;
+        }
+        // Intra-character gap (between dots/dashes)
+        if (j < pat.length - 1 && timingIdx < timings.length && timings[timingIdx].type === 'gap') {
+          charEndMs += timings[timingIdx].duration;
+          timingIdx++;
+        }
+      }
+      
+      // Inter-character gap (after this char, before next)
+      let interGapMs = 0;
+      if (timingIdx < timings.length && timings[timingIdx].type === 'gap') {
+        interGapMs = timings[timingIdx].duration;
+        timingIdx++;
+      }
+
+      const showAt = offset + charStartMs;           // when char audio starts
+      const hideAt = offset + charEndMs + interGapMs; // when next char starts
       const c = char;
       const idx = charIndex;
 
-      // Show buttons for this character
+      // Show buttons exactly when this character's audio begins
       this._charTimers.push(setTimeout(() => {
         if (this._mode !== 'decoding') return;
         this._currentExpectedChar = c;
@@ -387,7 +424,6 @@ export class Logbook {
       }, showAt));
 
       // If player hasn't pressed anything by the time window closes, insert underscore
-      // (only for actual characters, not spaces - spaces are auto-inserted above)
       this._charTimers.push(setTimeout(() => {
         if (this._mode !== 'decoding') return;
         // Check if this position still needs a character (not yet filled)
@@ -400,12 +436,13 @@ export class Logbook {
           this._refreshInput();
         }
         // Hide buttons briefly before next char appears
-        if (i < chars.length - 1 && chars[i + 1] !== ' ') {
+        const nextCharIdx = i + 1;
+        if (nextCharIdx < chars.length && chars[nextCharIdx] !== ' ') {
           this._setChoiceVisible(false);
         }
       }, hideAt));
 
-      ms += charDur + inter;
+      ms = charEndMs + interGapMs;
       charIndex++;
     }
 

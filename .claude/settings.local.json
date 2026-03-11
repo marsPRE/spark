@@ -2,7 +2,30 @@
   "permissions": {
     "allow": [
       "Bash(mkdir -p \"c:/Users/mspre/Documents/code/spark/src/scenes\" \"c:/Users/mspre/Documents/code/spark/src/systems\" \"c:/Users/mspre/Documents/code/spark/src/objects\" \"c:/Users/mspre/Documents/code/spark/src/ui\" \"c:/Users/mspre/Documents/code/spark/src/utils\" \"c:/Users/mspre/Documents/code/spark/src/config\" \"c:/Users/mspre/Documents/code/spark/styles\" \"c:/Users/mspre/Documents/code/spark/public/assets/data/voyages\" \"c:/Users/mspre/Documents/code/spark/C:/Users/mspre/.claude/projects/c--Users-mspre-Documents-code-spark/memory\")",
-      "Bash(mkdir -p \"C:/Users/mspre/.claude/projects/c--Users-mspre-Documents-code-spark/memory\")"
+      "Bash(mkdir -p \"C:/Users/mspre/.claude/projects/c--Users-mspre-Documents-code-spark/memory\")",
+      "Bash(TMPDIR=$HOME/tmp ls /data/data/com.termux/files/home/spark/)",
+      "Bash(export TMPDIR=$HOME/tmp && mkdir -p $TMPDIR && ls /data/data/com.termux/files/home/spark/)",
+      "WebSearch",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(grep -n \"width\\\\|height\\\\|scale\\\\|resize\\\\|responsive\\\\|autoCenter\\\\|FIT\\\\|RESIZE\" /home/spark/index.html /home/spark/vite.config.js /home/spark/src/*.js 2>/dev/null)",
+      "Bash(node -e \"\nconst Y=354, H=338, PAD=14;\nconst logAreaH = Math.floor\\(H*0.48\\);\nconst divY = Y + 44 + logAreaH + 4;\nconst A = divY + 8;\nconsole.log\\('logAreaH:', logAreaH\\);\nconsole.log\\('divY:', divY\\);\nconsole.log\\('A \\(decode top\\):', A\\);\nconsole.log\\('typed at:', A + 96\\);\nconsole.log\\('result at:', A + 145\\);\nconsole.log\\('hint at:', A + 165\\);\nconsole.log\\('btnY \\(A+result+4\\):', A + 145 + 4\\);\nconsole.log\\('game height: 720'\\);\n\")",
+      "Bash(grep -n \"const X\\\\|const Y\\\\|const W\\\\|const H\\\\|add\\\\.rectangle\\\\|add\\\\.text.*\\\\b[0-9]\\\\{3,4\\\\}\" /home/spark/src/objects/FrequencyDial.js | head -20\ngrep -n \"const X\\\\|const Y\\\\|add\\\\.rectangle\\\\|constructor\\\\|cx\\\\|cy\\\\b\" /home/spark/src/objects/WaveformDisplay.js | head -20\ngrep -n \"const X\\\\|const Y\\\\|add\\\\.rectangle\\\\|constructor\\\\|_x\\\\|_build\" /home/spark/src/ui/MorseReference.js | head -20)",
+      "Bash(grep -n \"const X\\\\|const Y\\\\|const W\\\\|const H\\\\|cx =\\\\|cy =\\\\| x =\\\\| y =\" /home/spark/src/objects/FrequencyDial.js | head -15\ngrep -n \"const X\\\\|const Y\\\\|cx =\\\\|cy =\\\\| x =\\\\| y =\" /home/spark/src/objects/WaveformDisplay.js | head -10\ngrep -n \"const X\\\\|const Y\\\\| x =\\\\| y =\\\\|add\\\\.\" /home/spark/src/ui/MorseReference.js | head -15)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(git push:*)",
+      "Bash(npx vite:*)",
+      "Bash(find /home/spark -type f -name \".claude\" -o -name \"*.json\" -o -name \"CLAUDE.md\" -o -name \"MCP*\" 2>/dev/null | head -20)",
+      "Bash(grep -r \"fetch\\\\|API\\\\|api\\\\|request\\\\|axios\\\\|xhr\\\\|XMLHttpRequest\\\\|http\\\\|server\\\\|mcp\\\\|MCP\" /home/spark/src --include=\"*.js\" 2>/dev/null | head -20)",
+      "Read(//home/.claude/**)",
+      "Bash(npm view:*)",
+      "Bash(ls /home/spark/.claude/projects/ 2>/dev/null; ls -la /home/spark/.claude/projects/*/ 2>/dev/null)",
+      "Bash(ls ~/.claude/projects/ 2>/dev/null && ls -la ~/.claude/projects/*/ 2>/dev/null)",
+      "Bash(claude mcp:*)",
+      "Bash(npm pack:*)",
+      "Bash(MOONSHOT_API_KEY=test timeout 3 node /home/spark/mcp-kimi/index.mjs; echo \"exit:$?\")"
     ]
   }
 }

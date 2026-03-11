@@ -19,6 +19,7 @@ import { MorseReference } from '../ui/MorseReference.js';
 import { NotificationSystem } from '../ui/NotificationSystem.js';
 import { DIFFICULTY } from '../config/difficulty.js';
 import { SeaView } from '../objects/SeaView.js';
+import { SeaChart } from '../objects/SeaChart.js';
 import { SettingsPanel } from '../ui/SettingsPanel.js';
 
 export class GameScene extends Phaser.Scene {
@@ -96,6 +97,7 @@ export class GameScene extends Phaser.Scene {
     this.hud = new HUD(this);
     this.morseReference = new MorseReference(this, diff.showReferenceCard);
     this.notifications = new NotificationSystem(this);
+    this.seaChart = new SeaChart(this);
 
     // (Morse keying → decode display removed; logbook now has its own input mode)
 
@@ -182,5 +184,6 @@ export class GameScene extends Phaser.Scene {
     this.seaView.update(delta);
     this.hud.update(delta);
     this.waveformDisplay.update(delta);
+    this.seaChart?.update();
   }
 }

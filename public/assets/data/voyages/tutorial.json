@@ -52,6 +52,70 @@
         "timeout":   { "reputation": -3, "story_flag": "" }
       },
       "time_limit": 120
+    },
+    {
+      "id": "tut_02",
+      "type": "ROUTINE",
+      "priority": 5,
+      "sender": {
+        "callsign": "MVS",
+        "shipName": "MV Saint Brendan",
+        "position": { "lat": 53.2, "lon": -4.5 },
+        "type": "merchant"
+      },
+      "receiver": { "callsign": "GLD", "shipName": "Land Station Liverpool" },
+      "content": {
+        "raw_morse": "-- ...- ... -.. . --. .-.. -.. .-. -.-",
+        "plain_text": "MVS DE GLD QTH IO53 QSL K",
+        "decoded_meaning": "MV Saint Brendan reporting position at grid IO53 (Anglesey area)"
+      },
+      "timing": {
+        "scheduled_time": 495,
+        "duration_seconds": 10,
+        "wpm": 12,
+        "repeats": 3
+      },
+      "signal": { "frequency": 500, "strength": 0.8, "noise_level": 0.15 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": {
+        "correct":   { "reputation": 3,  "story_flag": "position_report_heard" },
+        "incorrect": { "reputation": 0,  "story_flag": "" },
+        "timeout":   { "reputation": 0,  "story_flag": "" }
+      },
+      "time_limit": 180
+    },
+    {
+      "id": "tut_03",
+      "type": "ROUTINE",
+      "priority": 5,
+      "sender": {
+        "callsign": "SI",
+        "shipName": "Steamship Ireland",
+        "position": { "lat": 51.8, "lon": -8.2 },
+        "type": "merchant"
+      },
+      "receiver": { "callsign": "MPB", "shipName": "SS Pemberton" },
+      "content": {
+        "raw_morse": "... .. -.. . --. .-.. -.. --. .-. .. -.. . .-. -.-",
+        "plain_text": "SI DE GLD QTH IO51WB QSL K",
+        "decoded_meaning": "Steamship Ireland reporting position near Cork"
+      },
+      "timing": {
+        "scheduled_time": 510,
+        "duration_seconds": 12,
+        "wpm": 12,
+        "repeats": 3
+      },
+      "signal": { "frequency": 500, "strength": 0.7, "noise_level": 0.2 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": {
+        "correct":   { "reputation": 3,  "story_flag": "cork_traffic_heard" },
+        "incorrect": { "reputation": 0,  "story_flag": "" },
+        "timeout":   { "reputation": 0,  "story_flag": "" }
+      },
+      "time_limit": 180
     }
   ],
   "narrative_events": [],
