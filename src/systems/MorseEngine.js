@@ -20,6 +20,7 @@ export class MorseEngine {
   constructor() {
     this.wpm = 12;
     this.timings = getTimings(this.wpm);
+    this.farnsworthMultiplier = 1.0;  // 1.0 = no extra spacing
     this.inputState = {
       currentSymbols: '',   // dots/dashes being built into a character
       decodedText: '',      // fully decoded text so far
@@ -36,6 +37,10 @@ export class MorseEngine {
     this._ditEstimate   = this.timings.dit;
     this._dahEstimate   = this.timings.dah;
     this._pressDurations = [];   // all observed press durations this session
+  }
+
+  setFarnsworthMultiplier(mult) {
+    this.farnsworthMultiplier = Math.max(1.0, mult);
   }
 
   setWPM(wpm) {
@@ -121,16 +126,22 @@ export class MorseEngine {
     ).join(' ');
   }
 
-  encodeToTimings(text, wpm) {
+  encodeToTimings(text, wpm, farnsworthMultiplier = null) {
     const t = wpm ? getTimings(wpm) : this.timings;
     const result = [];
     const morseStr = this.encode(text);
     const tokens = morseStr.split(' ');
 
+    // Apply Farnsworth spacing: longer gaps between chars and words
+    // Use passed multiplier or the stored one (default to 1.0)
+    const farnMult = farnsworthMultiplier ?? this.farnsworthMultiplier ?? 1.0;
+    const charGap = t.interCharGap * farnMult;
+    const wordGap = t.interWordGap * farnMult;
+
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
       if (token === '/') {
-        result.push({ type: 'gap', duration: t.interWordGap });
+        result.push({ type: 'gap', duration: wordGap });
         continue;
       }
       for (let j = 0; j < token.length; j++) {
@@ -141,7 +152,7 @@ export class MorseEngine {
         }
       }
       if (i < tokens.length - 1 && tokens[i + 1] !== '/') {
-        result.push({ type: 'gap', duration: t.interCharGap });
+        result.push({ type: 'gap', duration: charGap });
       }
     }
     return result;

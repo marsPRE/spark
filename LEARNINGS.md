@@ -94,16 +94,6 @@ All systems are instantiated in `GameScene.create()` and cross-referenced via `t
 - Choice buttons for multiple-choice decode: 4 buttons stacked vertically at right edge (`keyCx=1190`), `btnW=156, btnH=84`
 - FrequencyDial: `DIAL_X=760, DIAL_Y=530`; WaveformDisplay: `WF_X=650, WF_Y=580, WF_W=340`
 
-## MCP / Kimi Integration
-
-- MCP server at `/home/spark/mcp-kimi/index.mjs` — wraps Kimi (Moonshot AI) API as a `call_kimi` tool
-- Uses `@modelcontextprotocol/sdk` with `McpServer` high-level API + `StdioServerTransport`
-- API key via `MOONSHOT_API_KEY` env var; base URL via `MOONSHOT_API_BASE` (default `https://api.moonshot.cn/v1`)
-- Default model: `kimi-k2-0711-preview`; 120s timeout via `AbortController`
-- Register: `claude mcp add -s user -e MOONSHOT_API_KEY=sk-... kimi -- node /home/spark/mcp-kimi/index.mjs`
-- `-s user` scope makes the tool available in all Claude Code projects
-- Tool parameters: `prompt` (required), `model`, `system_prompt`, `temperature` (0–1), `max_tokens`
-
 ## Git / WSL
 
 - Always create `.gitignore` before first commit — `node_modules/` and `dist/` are large and must be excluded

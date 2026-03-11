@@ -21,6 +21,7 @@ import { DIFFICULTY } from '../config/difficulty.js';
 import { SeaView } from '../objects/SeaView.js';
 import { SeaChart } from '../objects/SeaChart.js';
 import { SettingsPanel } from '../ui/SettingsPanel.js';
+import { SettingsSystem, DEFAULT_SETTINGS } from '../systems/SettingsSystem.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -60,16 +61,46 @@ export class GameScene extends Phaser.Scene {
     this._difficultyKey = voyageData?.difficulty || 'CADET';
     const diff = DIFFICULTY[this._difficultyKey];
 
+    // Load saved settings and merge with defaults
+    const savedSettings = SettingsSystem.load();
+
     // Central settings object — read by Logbook, MessageSystem, SettingsPanel
     this.settings = {
       playerWpm:            diff.wpm,
-      receiveWpmOverride:   null,       // null = use message's own WPM
-      initialSendWpm:       15,         // estimated WPM before adaptive timing kicks in
-      farnsworthMultiplier: 1.5,       // inter-char/word gaps multiplied by this
-      repeatPauseMs:        2000,      // ms pause between message repetitions
+      receiveWpmOverride:   savedSettings.receiveWpmOverride ?? DEFAULT_SETTINGS.receiveWpmOverride,
+      initialSendWpm:       savedSettings.initialSendWpm ?? DEFAULT_SETTINGS.initialSendWpm,
+      farnsworthMultiplier: savedSettings.farnsworthMultiplier ?? DEFAULT_SETTINGS.farnsworthMultiplier,
+      repeatPauseMs:        savedSettings.repeatPauseMs ?? DEFAULT_SETTINGS.repeatPauseMs,
+      buttonDisplayMs:      savedSettings.buttonDisplayMs ?? DEFAULT_SETTINGS.buttonDisplayMs,
+      // Audio settings for reference
+      masterVolume:         savedSettings.masterVolume ?? DEFAULT_SETTINGS.masterVolume,
+      morseVolume:          savedSettings.morseVolume ?? DEFAULT_SETTINGS.morseVolume,
+      staticVolume:         savedSettings.staticVolume ?? DEFAULT_SETTINGS.staticVolume,
     };
 
     this.morseEngine.setWPM(diff.wpm);
+
+    // Apply saved WPM override to radio system
+    if (this.settings.receiveWpmOverride) {
+      this.radioSystem.wpmOverride = this.settings.receiveWpmOverride;
+    }
+
+    // Apply Farnsworth multiplier to morse engine
+    if (this.settings.farnsworthMultiplier) {
+      this.morseEngine.setFarnsworthMultiplier(this.settings.farnsworthMultiplier);
+    }
+
+    // Apply saved audio settings
+    if (this.audioEngine.masterGain) {
+      this.audioEngine.masterGain.gain.value = this.settings.masterVolume;
+    }
+    if (this.audioEngine.settings) {
+      this.audioEngine.settings.morseVolume = this.settings.morseVolume;
+      this.audioEngine.settings.staticVolume = this.settings.staticVolume;
+    }
+    if (this.audioEngine.staticGain) {
+      this.audioEngine.staticGain.gain.value = this.settings.staticVolume;
+    }
 
     // Restore saved state (time, score, completed messages)
     if (this._saveData) {

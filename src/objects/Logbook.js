@@ -10,6 +10,8 @@
  * tx_result  : shows transmission quality score
  */
 
+import { DEFAULT_SETTINGS } from '../systems/SettingsSystem.js';
+
 const X   = 650;
 const Y   = 44;
 const W   = 420;
@@ -94,7 +96,16 @@ export class Logbook {
   }
 
   startDecodeInput(message) {
-    if (this._mode === 'decoding') return;   // already decoding — ignore repeat calls
+    // If already decoding a different message, finish it first
+    if (this._mode === 'decoding' && this._activeMsg?.id !== message.id) {
+      this._finishCurrentDecode();
+    }
+    
+    // If decoding the same message, ignore (duplicate call)
+    if (this._mode === 'decoding' && this._activeMsg?.id === message.id) {
+      return;
+    }
+    
     this._activeMsg = message;
     this._typedText = '';
     this._cursorPos = 0;
@@ -105,16 +116,28 @@ export class Logbook {
 
     // Schedule choice buttons for ALL repeats upfront
     const text    = message.content.plain_text;
-    const wpm     = message.timing?.wpm;
+    // Use same WPM as RadioSystem: override or message's own WPM
+    const wpm     = this.scene.radioSystem?.wpmOverride || message.timing?.wpm;
     const repeats = message.timing?.repeats || 1;
 
     // Calculate exact one-play duration from actual timings (same as audio)
     const timings  = this.scene.morseEngine.encodeToTimings(text, wpm);
     const baseDur  = timings.reduce((s, t) => s + t.duration, 0);
-    const pauseMs  = this.scene.settings?.repeatPauseMs ?? 2000;
+    const pauseMs  = this.scene.settings?.repeatPauseMs ?? DEFAULT_SETTINGS.repeatPauseMs;
     const playDur  = baseDur + pauseMs;  // full cycle including pause
 
     this._scheduleAllRepeats(text, wpm, repeats, playDur);
+  }
+
+  _finishCurrentDecode() {
+    // Clear any pending timers
+    this._clearCharTimers();
+    // Auto-submit current progress (even if incomplete)
+    if (this._mode === 'decoding' && this._activeMsg) {
+      this._stopKeyCapture();
+      // Don't add to logbook - just clean up
+      this._reset();
+    }
   }
 
   // ─── Build ───────────────────────────────────────────────────────────────────
@@ -329,41 +352,40 @@ export class Logbook {
 
   /** Schedule choice buttons for a single play of the message at `offset` ms.
    *  Uses EXACT same timings as the audio playback for perfect sync.
+   *  Buttons appear when a character ends and stay visible until the NEXT character ends.
    */
   _scheduleOnePass(text, wpm, offset, isFirstPass) {
     // Get exact timings from MorseEngine - same as audio uses
     const morse = this.scene.morseEngine;
     const timings = morse.encodeToTimings(text, wpm);
     
-    // Calculate cumulative time for each character start
-    let ms = 0;
-    let charIndex = 0;   // tracks position in message (ignoring spaces)
     const chars = text.toUpperCase().split('');
     
-    // Parse timings to find when each character starts/ends
+    // First pass: calculate all character end times
+    const charData = [];  // { char, charIndex, endMs }
+    let ms = 0;
+    let charIndex = 0;
     let timingIdx = 0;
     
     for (let i = 0; i < chars.length; i++) {
       const char = chars[i];
 
       if (char === ' ') {
-        // Find the word gap duration from timings
-        let wordGapMs = 0;
+        // Word gap - just advance time, no button
         while (timingIdx < timings.length && timings[timingIdx].type === 'gap') {
-          wordGapMs += timings[timingIdx].duration;
+          ms += timings[timingIdx].duration;
           timingIdx++;
         }
         
-        // Auto-insert space on every pass
+        // Schedule space insertion
         const spaceAt = offset + ms;
         this._charTimers.push(setTimeout(() => {
           if (this._mode !== 'decoding') return;
           this._typedText += ' ';
-          this._cursorPos = this._typedText.length;
+          // Cursor stays at current position - don't jump to end
           this._refreshInput();
         }, spaceAt));
         
-        ms += wordGapMs;
         continue;
       }
 
@@ -382,7 +404,6 @@ export class Logbook {
       }
 
       // Calculate exact duration of this character (tones + intra-char gaps)
-      let charStartMs = ms;
       let charEndMs = ms;
       
       for (let j = 0; j < pat.length; j++) {
@@ -405,52 +426,64 @@ export class Logbook {
         timingIdx++;
       }
 
-      const showAt = offset + charStartMs;           // when char audio starts
-      const hideAt = offset + charEndMs + interGapMs; // when next char starts
-      const c = char;
-      const idx = charIndex;
-
-      // Show buttons exactly when this character's audio begins
-      this._charTimers.push(setTimeout(() => {
-        if (this._mode !== 'decoding') return;
-        this._currentExpectedChar = c;
-        this._currentCharIndex = idx;
-        this._updateChoiceButtons();
-        this._setChoiceVisible(true);
-        // Move cursor to current position (for repeats - shows which char is active)
-        const targetPos = this._charIndexToStringPos(idx);
-        this._cursorPos = Math.min(targetPos, this._typedText.length);
-        this._refreshInput();
-      }, showAt));
-
-      // If player hasn't pressed anything by the time window closes, insert underscore
-      this._charTimers.push(setTimeout(() => {
-        if (this._mode !== 'decoding') return;
-        // Check if this position still needs a character (not yet filled)
-        const pos = this._charIndexToStringPos(idx);
-        if (pos >= this._typedText.length) {
-          // Nothing entered yet - insert placeholder underscore
-          this._typedText += '_';
-          this._cursorPos = this._typedText.length;
-          this._hiddenInput.value = this._typedText;
-          this._refreshInput();
-        }
-        // Hide buttons briefly before next char appears
-        const nextCharIdx = i + 1;
-        if (nextCharIdx < chars.length && chars[nextCharIdx] !== ' ') {
-          this._setChoiceVisible(false);
-        }
-      }, hideAt));
-
+      // Store character data with its end time
+      charData.push({ char, charIndex, endMs: charEndMs });
+      
       ms = charEndMs + interGapMs;
       charIndex++;
     }
 
-    // Hide buttons at end of this pass
+    // Second pass: schedule button timers
+    // Buttons show when char ends, hide when NEXT char ends
+    const buttonDisplayMs = this.scene.settings?.buttonDisplayMs ?? DEFAULT_SETTINGS.buttonDisplayMs;
+    
+    for (let i = 0; i < charData.length; i++) {
+      const { char, charIndex: idx, endMs } = charData[i];
+      const showAt = offset + endMs;
+      
+      // Hide when next character ends, or at end of message
+      let hideAt;
+      if (i < charData.length - 1) {
+        // Hide when next character ends (overlap - next char's buttons will show immediately)
+        hideAt = offset + charData[i + 1].endMs;
+      } else {
+        // Last character - stay visible for configured duration
+        hideAt = showAt + Math.max(buttonDisplayMs, 500); // at least 500ms for last char
+      }
+
+      // Show buttons when this character's audio ends
+      this._charTimers.push(setTimeout(() => {
+        if (this._mode !== 'decoding') return;
+        this._currentExpectedChar = char;
+        this._currentCharIndex = idx;
+        this._updateChoiceButtons();
+        this._setChoiceVisible(true);
+        // Cursor stays at current input position (where player is typing)
+        // Don't jump around - let the player control cursor position
+        this._refreshInput();
+      }, showAt));
+
+      // Hide buttons when next char ends (or at end), insert underscore if needed
+      this._charTimers.push(setTimeout(() => {
+        if (this._mode !== 'decoding') return;
+        // Check if this position still needs a character
+        const pos = this._charIndexToStringPos(idx);
+        if (pos >= this._typedText.length) {
+          // Nothing entered yet - insert placeholder underscore
+          this._typedText += '_';
+          // Keep cursor at current position - don't jump
+          this._hiddenInput.value = this._typedText;
+          this._refreshInput();
+        }
+      }, hideAt));
+    }
+
+    // Hide buttons at end of this pass (safety net for last char)
+    const lastCharEnd = charData.length > 0 ? charData[charData.length - 1].endMs : 0;
     this._charTimers.push(setTimeout(() => {
       if (this._mode !== 'decoding') return;
       this._setChoiceVisible(false);
-    }, offset + ms));
+    }, offset + lastCharEnd + Math.max(buttonDisplayMs, 500) + 100));
   }
 
   _updateChoiceButtons() {
@@ -732,7 +765,18 @@ export class Logbook {
       const cursor = this._cursorVisible ? '█' : ' ';
       const t = this._typedText;
       const p = this._cursorPos;
-      this._inputDisplay.setText(t.slice(0, p) + cursor + t.slice(p));
+      // Show cursor at current position, with a visual indicator of the active character
+      let displayText = '';
+      for (let i = 0; i < t.length; i++) {
+        if (i === p) {
+          displayText += cursor;
+        }
+        displayText += t[i];
+      }
+      if (p >= t.length) {
+        displayText += cursor;
+      }
+      this._inputDisplay.setText(displayText);
     } else if (this._mode === 'transmitting') {
       const morse  = this.scene.morseEngine;
       const done   = morse?.inputState?.decodedText ?? this._txKeyed;
