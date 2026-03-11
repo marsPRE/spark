@@ -31,8 +31,18 @@ export class HUD {
       fontSize: '14px', color: '#66aa66', fontFamily: 'monospace',
     });
 
-    this._repText = sc.add.text(w - 180, 10, 'Rep: 50  Competent', {
+    this._repText = sc.add.text(w - 220, 10, 'Rep: 50  Competent', {
       fontSize: '13px', color: '#aabb88', fontFamily: 'monospace',
+    });
+
+    // Pause button (top-right) — for touch/mobile
+    const pauseBtn = sc.add.text(w - 44, 10, '❚❚', {
+      fontSize: '14px', color: '#8899bb', fontFamily: 'monospace',
+      backgroundColor: '#1a1a2e', padding: { x: 8, y: 2 },
+    }).setInteractive({ useHandCursor: true });
+    pauseBtn.on('pointerup', () => {
+      sc.scene.pause();
+      sc.scene.launch('PauseScene');
     });
 
     // Signal alert (hidden by default)

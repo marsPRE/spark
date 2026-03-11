@@ -21,7 +21,15 @@ export class PauseScene extends Phaser.Scene {
       this.scene.stop();
     });
 
-    this._btn(width / 2, height / 2 + 70, 'QUIT TO MENU', () => {
+    this._btn(width / 2, height / 2 + 70, 'SAVE & QUIT', () => {
+      const gameScene = this.scene.get(SCENES.GAME);
+      gameScene.saveGame();
+      this.scene.stop(SCENES.GAME);
+      this.scene.stop();
+      this.scene.start(SCENES.MENU);
+    });
+
+    this._btn(width / 2, height / 2 + 140, 'QUIT (NO SAVE)', () => {
       this.scene.stop(SCENES.GAME);
       this.scene.stop();
       this.scene.start(SCENES.MENU);

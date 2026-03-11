@@ -27,7 +27,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   init(data) {
-    this.voyageId = data?.voyageId || 'tutorial';
+    this.voyageId  = data?.voyageId  || 'tutorial';
+    this._saveData = data?.saveData  || null;
   }
 
   create() {
@@ -55,8 +56,18 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Set difficulty
-    const diff = DIFFICULTY[voyageData?.difficulty || 'CADET'];
+    this._difficultyKey = voyageData?.difficulty || 'CADET';
+    const diff = DIFFICULTY[this._difficultyKey];
     this.morseEngine.setWPM(diff.wpm);
+
+    // Restore saved state (time, score, completed messages)
+    if (this._saveData) {
+      this._loadSaveState(this._saveData);
+    }
+
+    // Try to init audio immediately — the user's menu click may still count
+    // as a valid gesture in some browsers. If not, the pointerdown fallback below handles it.
+    this.audioEngine.init();
 
     // Sea view (upper half — built before workspace so it draws behind)
     this.seaView = new SeaView(this);
@@ -117,6 +128,41 @@ export class GameScene extends Phaser.Scene {
     };
     this.input.once('pointerdown', initAudio);
     this.input.keyboard.once('keydown', initAudio);
+  }
+
+  saveGame() {
+    const completedMessages = [
+      ...this.messageSystem.received.map(m => ({ id: m.id, status: 'received' })),
+      ...this.messageSystem.missed.map(m  => ({ id: m.id, status: 'missed'   })),
+    ];
+    this.saveSystem.save({
+      voyageId:           this.voyageId,
+      difficulty:         this._difficultyKey,
+      gameMinutes:        this.timeSystem.gameMinutes,
+      score:              this.scoringSystem.score,
+      reputation:         this.scoringSystem.reputation,
+      stats:              { ...this.scoringSystem.stats },
+      completedMessages,
+    });
+  }
+
+  _loadSaveState(save) {
+    this.timeSystem.gameMinutes    = save.gameMinutes;
+    this.scoringSystem.score       = save.score;
+    this.scoringSystem.reputation  = save.reputation;
+    if (save.stats) Object.assign(this.scoringSystem.stats, save.stats);
+
+    if (save.completedMessages?.length) {
+      const doneMap = new Map(save.completedMessages.map(m => [m.id, m.status]));
+      this.messageSystem.scheduled = this.messageSystem.scheduled.filter(m => {
+        const savedStatus = doneMap.get(m.id);
+        if (!savedStatus) return true;
+        m.status = savedStatus;
+        if (savedStatus === 'received') this.messageSystem.received.push(m);
+        else                            this.messageSystem.missed.push(m);
+        return false;
+      });
+    }
   }
 
   update(time, delta) {

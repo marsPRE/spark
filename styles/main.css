@@ -23,3 +23,31 @@ html, body {
   display: block;
   margin: auto;
 }
+
+/* Rotate overlay — shown in portrait on mobile */
+#rotate-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #0a0a14;
+  align-items: center;
+  justify-content: center;
+}
+
+#rotate-message {
+  text-align: center;
+  color: #88aacc;
+  font-family: monospace;
+  font-size: 18px;
+  line-height: 2;
+}
+
+@media (orientation: portrait) and (max-width: 900px) {
+  #rotate-overlay {
+    display: flex;
+  }
+  #game-container {
+    display: none;
+  }
+}

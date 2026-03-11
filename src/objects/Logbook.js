@@ -10,7 +10,7 @@
  * tx_result  : shows transmission quality score
  */
 
-const X   = 860;
+const X   = 440;
 const Y   = 354;
 const W   = 400;
 const H   = 338;
@@ -27,6 +27,45 @@ const R = {
   hint:     165,
 };
 
+// ─── Morse confusable lookup ─────────────────────────────────────────────────
+const MORSE_PAT = {
+  A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',
+  I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',
+  Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',
+  Y:'-.--',Z:'--..',
+  '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-',
+  '5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
+};
+
+/** Levenshtein distance between two strings */
+function editDist(a, b) {
+  const m = a.length, n = b.length;
+  const d = Array.from({ length: m + 1 }, (_, i) => {
+    const row = new Array(n + 1);
+    row[0] = i;
+    return row;
+  });
+  for (let j = 1; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      d[i][j] = Math.min(
+        d[i-1][j] + 1, d[i][j-1] + 1,
+        d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1)
+      );
+  return d[m][n];
+}
+
+/** Return 3 confusable characters for `char` based on Morse pattern similarity */
+function getConfusables(char) {
+  const pat = MORSE_PAT[char];
+  if (!pat) return ['E', 'T', 'A'];
+  const scored = Object.entries(MORSE_PAT)
+    .filter(([c]) => c !== char)
+    .map(([c, p]) => ({ c, d: editDist(pat, p) }))
+    .sort((a, b) => a.d - b.d || Math.random() - 0.5);
+  return scored.slice(0, 3).map(s => s.c);
+}
+
 export class Logbook {
   constructor(scene) {
     this.scene       = scene;
@@ -38,6 +77,9 @@ export class Logbook {
     this._keyHandler = null;
     this._enterHandler = null;
     this._cursorVisible = true;
+    this._charTimers         = [];
+    this._currentExpectedChar = null;
+    this._currentCharIndex   = 0;
 
     this._build();
   }
@@ -52,17 +94,62 @@ export class Logbook {
   }
 
   startDecodeInput(message) {
+    if (this._mode === 'decoding') return;   // already decoding — ignore repeat calls
     this._activeMsg = message;
     this._typedText = '';
+    this._cursorPos = 0;
     this._mode      = 'decoding';
     this._refreshAll();
     this._startKeyCapture();
+
+    // Schedule choice buttons for ALL repeats upfront
+    const text    = message.content.plain_text;
+    const wpm     = message.timing?.wpm;
+    const repeats = message.timing?.repeats || 1;
+
+    // Calculate one-play duration from actual timings
+    const timings  = this.scene.morseEngine.encodeToTimings(text, wpm);
+    const playDur  = timings.reduce((s, t) => s + t.duration, 0) + 300;
+
+    this._scheduleAllRepeats(text, wpm, repeats, playDur);
   }
 
   // ─── Build ───────────────────────────────────────────────────────────────────
 
+  _buildHiddenInput() {
+    this._hiddenInput = document.createElement('input');
+    Object.assign(this._hiddenInput, {
+      type: 'text',
+      autocomplete: 'off',
+      autocorrect: 'off',
+      autocapitalize: 'characters',
+      spellcheck: false,
+    });
+    Object.assign(this._hiddenInput.style, {
+      position: 'fixed', opacity: '0', pointerEvents: 'none',
+      top: '0', left: '0', width: '1px', height: '1px',
+    });
+    document.body.appendChild(this._hiddenInput);
+
+    this._hiddenInput.addEventListener('input', () => {
+      if (this._mode !== 'decoding') return;
+      this._typedText = this._hiddenInput.value.toUpperCase();
+      this._cursorPos = this._typedText.length;
+      this._refreshInput();
+    });
+
+    // Enter on mobile keyboard
+    this._hiddenInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && this._mode === 'decoding') {
+        e.preventDefault();
+        this._submitDecode();
+      }
+    });
+  }
+
   _build() {
     const s = this.scene;
+    this._buildHiddenInput();
 
     s.add.rectangle(X + W / 2, Y + H / 2, W, H, 0x0e0c08)
       .setStrokeStyle(1, 0x5a4a2a);
@@ -127,6 +214,87 @@ export class Logbook {
       fontSize: '11px', color: '#556688', fontFamily: 'monospace',
     }).setVisible(false);
 
+    // Submit button (touch-friendly, replaces ENTER key)
+    this._submitBtn = s.add.text(X + W - PAD, A + R.typed, 'SEND ▶', {
+      fontSize: '13px', color: '#00ff88', fontFamily: 'monospace',
+      backgroundColor: '#0a2a1a', padding: { x: 8, y: 4 },
+    }).setOrigin(1, 0).setInteractive({ useHandCursor: true }).setVisible(false);
+    this._submitBtn.on('pointerup', () => {
+      if (this._mode === 'decoding')    this._submitDecode();
+      else if (this._mode === 'transmitting') this._submitTransmit();
+    });
+
+    // ── Choice buttons (touch decode) ──────────────────────────────────────────
+    // Row 1 (4 choices) at A+R.text = 588, Row 2 (SPC+DEL) at +34
+    // These areas are empty during decoding mode (targetText/abbrText are hidden)
+    this._choiceBtns = [];
+    const btnH = 30, btnGap = 6;
+    const btnY  = A + R.text;           // 572+16 = 588 — inside panel, well clear of HUD
+    const btnY2 = btnY + btnH + btnGap; // 624
+    const btnStartX = X + PAD;
+    const btnW = 88;                    // 4×88 + 3×6 = 370px
+
+    for (let i = 0; i < 4; i++) {
+      const bx = btnStartX + i * (btnW + btnGap) + btnW / 2;
+      const bg = s.add.rectangle(bx, btnY + btnH / 2, btnW, btnH, 0x1a2a40)
+        .setStrokeStyle(1, 0x4488aa).setInteractive({ useHandCursor: true })
+        .setDepth(10).setVisible(false);
+      const label = s.add.text(bx, btnY + btnH / 2, '', {
+        fontSize: '18px', color: '#ccddff', fontFamily: 'monospace',
+      }).setOrigin(0.5).setDepth(11).setVisible(false);
+      bg.on('pointerup', () => {
+        if (this._mode !== 'decoding') return;
+        const ch = label.text;
+        if (!ch) return;
+
+        // Find the write position — map charIndex to string position (skipping spaces)
+        const pos = this._charIndexToStringPos(this._currentCharIndex);
+        if (pos < this._typedText.length) {
+          // Overwrite existing character at this position
+          this._typedText = this._typedText.slice(0, pos) + ch + this._typedText.slice(pos + 1);
+        } else {
+          this._typedText += ch;
+        }
+        this._cursorPos = this._typedText.length;
+        this._hiddenInput.value = this._typedText;
+        this._refreshInput();
+      });
+      this._choiceBtns.push({ bg, label });
+    }
+
+    // SPC and DEL on second row
+    const spcBg = s.add.rectangle(btnStartX + 44, btnY2 + btnH / 2, 88, btnH, 0x1a1a2e)
+      .setStrokeStyle(1, 0x556688).setInteractive({ useHandCursor: true })
+      .setDepth(10).setVisible(false);
+    const spcLbl = s.add.text(btnStartX + 44, btnY2 + btnH / 2, 'SPACE', {
+      fontSize: '13px', color: '#8899bb', fontFamily: 'monospace',
+    }).setOrigin(0.5).setDepth(11).setVisible(false);
+    spcBg.on('pointerup', () => {
+      if (this._mode !== 'decoding') return;
+      this._typedText += ' ';
+      this._cursorPos = this._typedText.length;
+      this._hiddenInput.value = this._typedText;
+      this._refreshInput();
+      this._updateChoiceButtons();
+    });
+    this._spaceBtn = { bg: spcBg, label: spcLbl };
+
+    const delBg = s.add.rectangle(btnStartX + 140, btnY2 + btnH / 2, 88, btnH, 0x1a1a2e)
+      .setStrokeStyle(1, 0x885566).setInteractive({ useHandCursor: true })
+      .setDepth(10).setVisible(false);
+    const delLbl = s.add.text(btnStartX + 140, btnY2 + btnH / 2, '◄ DEL', {
+      fontSize: '13px', color: '#bb8899', fontFamily: 'monospace',
+    }).setOrigin(0.5).setDepth(11).setVisible(false);
+    delBg.on('pointerup', () => {
+      if (this._mode !== 'decoding' || !this._typedText) return;
+      this._typedText = this._typedText.slice(0, -1);
+      this._cursorPos = this._typedText.length;
+      this._hiddenInput.value = this._typedText;
+      this._refreshInput();
+      this._updateChoiceButtons();
+    });
+    this._bkspBtn = { bg: delBg, label: delLbl };
+
     // Cursor blink timer
     s.time.addEvent({
       delay: 500, loop: true,
@@ -142,12 +310,127 @@ export class Logbook {
     // (set up lazily in _startTransmit when morseEngine is ready)
   }
 
+  // ─── Choice buttons logic ──────────────────────────────────────────────────
+
+  _clearCharTimers() {
+    this._charTimers.forEach(t => clearTimeout(t));
+    this._charTimers = [];
+    this._currentExpectedChar = null;
+    this._currentCharIndex = 0;
+  }
+
+  /** Map a character index (ignoring spaces) to a position in _typedText (which has spaces). */
+  _charIndexToStringPos(charIdx) {
+    let count = 0;
+    for (let i = 0; i < this._typedText.length; i++) {
+      if (this._typedText[i] !== ' ') {
+        if (count === charIdx) return i;
+        count++;
+      }
+    }
+    return this._typedText.length;   // beyond current text — append
+  }
+
+  /** Schedule buttons for all repeats at once. */
+  _scheduleAllRepeats(text, wpm, repeats, playDur) {
+    this._clearCharTimers();
+    this._setChoiceVisible(false);
+
+    for (let r = 0; r < repeats; r++) {
+      const offset = r * playDur;
+      this._scheduleOnePass(text, wpm, offset, r === 0);
+    }
+  }
+
+  /** Schedule choice buttons for a single play of the message at `offset` ms. */
+  _scheduleOnePass(text, wpm, offset, isFirstPass) {
+    const dit      = 1200 / (wpm || 12);
+    const dah      = 3 * dit;
+    const intra    = dit;
+    const inter    = 3 * dit;
+    const wordGap  = 7 * dit;
+
+    const chars = text.toUpperCase().split('');
+    let ms = 0;
+    let charIndex = 0;   // tracks position in message (ignoring spaces)
+
+    for (let i = 0; i < chars.length; i++) {
+      const char = chars[i];
+
+      if (char === ' ') {
+        // Auto-insert space only on first pass
+        if (isFirstPass) {
+          const spaceAt = offset + ms;
+          this._charTimers.push(setTimeout(() => {
+            if (this._mode !== 'decoding') return;
+            this._typedText += ' ';
+            this._cursorPos = this._typedText.length;
+            this._refreshInput();
+          }, spaceAt));
+        }
+        ms += wordGap;
+        continue;
+      }
+
+      const pat = MORSE_PAT[char];
+      if (!pat) { ms += dit * 4 + inter; continue; }
+
+      let charDur = 0;
+      for (let j = 0; j < pat.length; j++) {
+        charDur += pat[j] === '.' ? dit : dah;
+        if (j < pat.length - 1) charDur += intra;
+      }
+
+      const showAt = offset + ms + dit;
+      const c = char;
+      const idx = charIndex;
+      this._charTimers.push(setTimeout(() => {
+        if (this._mode !== 'decoding') return;
+        this._currentExpectedChar = c;
+        this._currentCharIndex = idx;
+        this._updateChoiceButtons();
+        this._setChoiceVisible(true);
+      }, showAt));
+
+      ms += charDur + inter;
+      charIndex++;
+    }
+
+    // Hide buttons at end of this pass
+    this._charTimers.push(setTimeout(() => {
+      if (this._mode !== 'decoding') return;
+      this._setChoiceVisible(false);
+    }, offset + ms));
+  }
+
+  _updateChoiceButtons() {
+    const nextChar = this._currentExpectedChar;
+    if (!nextChar || !MORSE_PAT[nextChar]) return;
+
+    const confusables = getConfusables(nextChar);
+    const choices = [nextChar, ...confusables].sort(() => Math.random() - 0.5);
+    this._choiceBtns.forEach((btn, i) => btn.label.setText(choices[i]));
+  }
+
+  _setChoiceVisible(visible) {
+    this._choiceBtns.forEach(b => {
+      b.bg.setVisible(visible);
+      b.label.setVisible(visible);
+    });
+    this._spaceBtn.bg.setVisible(false);
+    this._spaceBtn.label.setVisible(false);
+    this._bkspBtn.bg.setVisible(false);
+    this._bkspBtn.label.setVisible(false);
+  }
+
   // ─── DECODING mode ───────────────────────────────────────────────────────────
 
   _startKeyCapture() {
     this.scene.telegraphKey?._disableSpace?.();
     this._typedText = '';
     this._cursorPos = 0;
+
+    this._hiddenInput.value = '';
 
     this._keyHandler = (e) => {
       if (this._mode !== 'decoding') return;
@@ -193,10 +476,12 @@ export class Logbook {
       window.removeEventListener('keydown', this._keyHandler);
       this._keyHandler = null;
     }
+    this._hiddenInput.blur();
     this.scene.telegraphKey?._enableSpace?.();
   }
 
   _submitDecode() {
+    this._clearCharTimers();
     this._stopKeyCapture();
 
     const result   = this.scene.messageSystem?.submitDecoding(
@@ -332,11 +617,18 @@ export class Logbook {
   // ─── Reset ───────────────────────────────────────────────────────────────────
 
   _reset() {
+    this._clearCharTimers();
     this._mode      = 'idle';
     this._activeMsg = null;
     this._typedText = '';
     this._txKeyed   = '';
+    this._hiddenInput.blur();
+    this._setChoiceVisible(false);
     this._refreshAll();
+  }
+
+  destroy() {
+    this._hiddenInput?.remove();
   }
 
   // ─── Refresh helpers ─────────────────────────────────────────────────────────
@@ -352,6 +644,12 @@ export class Logbook {
     this._inputDisplay.setVisible(active);
     this._resultText.setVisible(isResult);
     this._hintText.setVisible(active);
+    const showSubmit = this._mode === 'decoding' || this._mode === 'transmitting';
+    this._submitBtn.setVisible(showSubmit);
+
+    if (this._mode !== 'decoding') {
+      this._setChoiceVisible(false);
+    }
 
     if (this._mode === 'decoding') {
       this._targetText.setColor('#88aacc');

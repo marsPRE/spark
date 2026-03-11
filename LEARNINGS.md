@@ -4,7 +4,7 @@
 
 Maritime telegraphy simulation game. Phaser 3 + Vite.
 WSL path: `/mnt/c/Users/mspre/Documents/code/spark`
-Dev server: `npm run dev` → port 3001
+Dev server: `npm run dev` → port 3000 (Vite default; port 3001 was old config)
 
 ---
 
@@ -22,6 +22,7 @@ All systems are instantiated in `GameScene.create()` and cross-referenced via `t
 
 ## Audio (AudioEngine)
 
+- Also call `audioEngine.init()` directly in `GameScene.create()` — the user's menu click often still counts as a valid gesture when the scene transitions, avoiding the "no audio on first message" bug on mobile
 - AudioContext must be resumed on first user interaction — use both `pointerdown` AND `keydown` listeners, since the user may click in MenuScene before GameScene is ready
 - Always call `cancelScheduledValues` + `setValueAtTime(0)` before scheduling new Morse playback — otherwise automation from a previous repeat bleeds into the next
 - Use `linearRampToValueAtTime` with 5ms ramps for clean keying sound (not `setTargetAtTime`)
@@ -57,18 +58,34 @@ All systems are instantiated in `GameScene.create()` and cross-referenced via `t
 - Auto-advance from `result` → `transmitting` and `tx_result` → `idle` using `setTimeout(fn, 2000)` — no keypress needed
 - Live TX display: show `decodedText + [currentSymbols] + cursor` so player sees symbols being built
 - Show live WPM estimate in hint bar: `Math.round(1200 / morse._ditEstimate)` WPM
+- **Mobile multiple-choice decode**: `_scheduleAllRepeats(text, wpm, repeats, playDur)` pre-schedules buttons for ALL repeats at once using `setTimeout` offsets. Do NOT rely on `startDecodeInput` being called again per repeat — it only runs once (guarded by `if (this._mode === 'decoding') return`)
+- Choice buttons show `1 dit` after each character starts (`showAt = offset + ms + dit`) and stay visible until the next character's show timer fires — gives ~1 dit overlap into the next character
+- On repeat passes, button tap **overwrites** the character at `_currentCharIndex` position (mapped via `_charIndexToStringPos`), not appending — allows correction without DEL button
+- Spaces are auto-inserted into `_typedText` only on the first pass; repeat passes skip space timers
+- Phaser: `setInteractive()` objects remain input-active even when `setVisible(false)` — use `disableInteractive()` only when necessary; for choice buttons, a mode-check in the `pointerup` handler is sufficient and avoids broken re-enable after `disableInteractive()`
 
 ## TelegraphKey
 
 - Record both `tone` (key-down duration) AND `gap` (silence since last key-up) for scoring — `scoreTransmission` expects interleaved tone/gap array
 - First gap is skipped (set `_lastEventTime = 0`; gaps only recorded when `_lastEventTime > 0`)
 - `_disabled` must be initialized to `false` in constructor
+- Touch key: large circle button built in `_buildTouchKey()` using `pointerdown`/`pointerup`/`pointerout` events — mirrors SPACE key logic exactly. Position at right edge (X≈1130) to avoid overlap with logbook and MorseReference
 
 ## SeaView
 
 - Build before workspace objects so it draws behind (lower depth)
 - Use deterministic PRNG (Mulberry32) for stars so they don't re-randomize on update
 - Redraw wave polygons every frame using `graphics.clear()` + `fillPoints()` — don't try to update existing geometry
+
+## Mobile / Responsive
+
+- Game is fixed 1280×720 landscape — enforce with CSS `@media (orientation: portrait)` overlay, not JS
+- Fullscreen: request `this.scale.startFullscreen()` on first `pointerdown` in MenuScene
+- Viewport meta: add `maximum-scale=1.0, user-scalable=no` to prevent pinch-zoom
+- Hidden `<input>` for keyboard: create in Logbook constructor, focus on `_startKeyCapture` — but only needed if no choice buttons; causes system keyboard to appear (undesirable on mobile when choice buttons are present)
+- **Layout** (1280×720): Left (X 0–440): FrequencyDial, WaveformDisplay; Center (X 440–840): Logbook; Right (X 840–1280): touch Morse key (cx=1130)
+- MorseReference: anchor at X=16 (left-aligned) so it doesn't overlap the logbook
+- HUD bottom bar is at Y=692–720 — don't place interactive elements below Y≈690
 
 ## Git / WSL
 
