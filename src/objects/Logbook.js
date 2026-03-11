@@ -10,10 +10,10 @@
  * tx_result  : shows transmission quality score
  */
 
-const X   = 440;
-const Y   = 354;
-const W   = 400;
-const H   = 338;
+const X   = 650;
+const Y   = 44;
+const W   = 420;
+const H   = 400;
 const PAD = 14;
 
 // Y positions relative to the decode-area top
@@ -233,21 +233,16 @@ export class Logbook {
     // Positioned at the telegraph key location (right side of screen)
     // Telegraph key is hidden during decoding to make room for these buttons
     this._choiceBtns = [];
-    const btnH = 100, btnGap = 20;
-    const btnW = 120;
-    // Center around the telegraph key position (1130, 490)
-    const keyCx = 1130, keyCy = 490;
-    const btnY1 = keyCy - 110;  // top row (higher, no space button below)
-    const btnY2 = keyCy + 10;   // bottom row (centered vertically)
-    const btnX1 = keyCx - btnW - btnGap / 2;  // left column
-    const btnX2 = keyCx + btnGap / 2;         // right column
+    const btnW = 156, btnH = 84, btnGap = 10;  // 20% larger
+    // Center around the telegraph key position (1190, 280)
+    const keyCx = 1190, keyCy = 280;
 
-    // 4 choice buttons in 2x2 grid
+    // 4 choice buttons stacked vertically
     const btnPositions = [
-      { x: btnX1 + btnW / 2, y: btnY1 + btnH / 2 },
-      { x: btnX2 + btnW / 2, y: btnY1 + btnH / 2 },
-      { x: btnX1 + btnW / 2, y: btnY2 + btnH / 2 },
-      { x: btnX2 + btnW / 2, y: btnY2 + btnH / 2 },
+      { x: keyCx, y: keyCy - 110 },  // top
+      { x: keyCx, y: keyCy - 30 },   // upper-middle
+      { x: keyCx, y: keyCy + 50 },   // lower-middle
+      { x: keyCx, y: keyCy + 130 },  // bottom
     ];
 
     for (let i = 0; i < 4; i++) {
@@ -336,7 +331,8 @@ export class Logbook {
 
   /** Schedule choice buttons for a single play of the message at `offset` ms. */
   _scheduleOnePass(text, wpm, offset, isFirstPass) {
-    const dit      = 1200 / (wpm || 12);
+    const effectiveWpm = this.scene.radioSystem?.wpmOverride || wpm || 12;
+    const dit      = 1200 / effectiveWpm;
     const dah      = 3 * dit;
     const intra    = dit;
     const farnMult = this.scene.settings?.farnsworthMultiplier ?? 1.0;
@@ -372,8 +368,8 @@ export class Logbook {
         if (j < pat.length - 1) charDur += intra;
       }
 
-      const showAt = offset + ms + dit;
-      const hideAt = offset + ms + charDur + inter - dit; // hide shortly before next char
+      const showAt = offset + ms;                 // show immediately when char starts
+      const hideAt = offset + ms + charDur + inter; // hide when next char starts
       const c = char;
       const idx = charIndex;
 

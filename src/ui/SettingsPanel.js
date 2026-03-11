@@ -20,9 +20,9 @@ export class SettingsPanel {
   _build() {
     const s  = this.scene;
     const W  = 380;
-    const H  = 370;
+    const H  = 420;
     const X  = Math.round(s.scale.width  / 2 - W / 2);
-    const Y  = 180;
+    const Y  = 160;
 
     this._container = s.add.container(X, Y).setDepth(150).setVisible(false);
 
@@ -64,16 +64,15 @@ export class SettingsPanel {
     const settings = this.scene.settings ?? {};
 
     this._addSlider({
-      label: 'Send WPM',
+      label: 'Incoming WPM',
       gainFn: (v) => {
         const wpm = Math.round(5 + v * 20);  // 5–25 WPM
-        if (this.scene.settings) this.scene.settings.playerWpm = wpm;
-        this.scene.morseEngine?.setWPM(wpm);
+        if (this.scene.radioSystem) this.scene.radioSystem.wpmOverride = wpm;
         this._wpmReadout?.setText(`${wpm}`);
       },
-      default: ((settings.playerWpm ?? 12) - 5) / 20,
+      default: ((settings.receiveWpmOverride ?? 5) - 5) / 20,
       y: 195,
-      label2: `${settings.playerWpm ?? 12}`,
+      label2: `${settings.receiveWpmOverride ?? 5}`,
       isWpm: true,
     }, W, true);
 
@@ -103,6 +102,19 @@ export class SettingsPanel {
       isPause: true,
     }, W, true);
 
+    this._addSlider({
+      label: 'Initial Send WPM',
+      gainFn: (v) => {
+        const wpm = Math.round(5 + v * 20);  // 5–25 WPM
+        if (this.scene.settings) this.scene.settings.initialSendWpm = wpm;
+        this._sendWpmReadout?.setText(`${wpm}`);
+      },
+      default: ((settings.initialSendWpm ?? 15) - 5) / 20,
+      y: 330,
+      label2: `${settings.initialSendWpm ?? 15}`,
+      isSendWpm: true,
+    }, W, true);
+
     // ── Navigation buttons ──────────────────────────────────────────────────
     const btnStyle = {
       fontSize: '14px', color: '#ccddff', fontFamily: 'monospace',
@@ -128,7 +140,7 @@ export class SettingsPanel {
     this._container.add(closeBtn);
   }
 
-  _addSlider({ label, gainFn, default: defaultVal, y, label2, isWpm, isFarn, isPause }, panelW, isMorse) {
+  _addSlider({ label, gainFn, default: defaultVal, y, label2, isWpm, isFarn, isPause, isSendWpm }, panelW, isMorse) {
     const s       = this.scene;
     const trackX  = 20;
     const trackW  = panelW - 40;
@@ -147,9 +159,10 @@ export class SettingsPanel {
     }).setOrigin(1, 0);
     this._container.add(readout);
 
-    if (isWpm)   this._wpmReadout   = readout;
-    if (isFarn)  this._farnReadout  = readout;
-    if (isPause) this._pauseReadout = readout;
+    if (isWpm)      this._wpmReadout      = readout;
+    if (isFarn)     this._farnReadout     = readout;
+    if (isPause)    this._pauseReadout    = readout;
+    if (isSendWpm)  this._sendWpmReadout  = readout;
 
     const track = s.add.rectangle(
       trackX + trackW / 2, y + trackH / 2, trackW, trackH, 0x223344

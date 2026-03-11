@@ -4,8 +4,8 @@
  */
 import { FREQ_MIN, FREQ_MAX, FREQ_DISTRESS } from '../config/constants.js';
 
-const DIAL_X = 110;
-const DIAL_Y = 556;
+const DIAL_X = 760;
+const DIAL_Y = 530;
 
 export class FrequencyDial {
   constructor(scene, radioSystem) {

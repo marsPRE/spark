@@ -6,6 +6,7 @@ export class RadioSystem {
     this.morse = morseEngine;
     this.currentFrequency = FREQ_DISTRESS;
     this.antennaCondition = 1.0;   // 0..1
+    this.wpmOverride      = null;  // null = use message's own WPM
     this.activeSignals = [];        // currently playing signals
     this.signalQueue = [];          // signals waiting to play
     this.listeners = {
@@ -53,7 +54,7 @@ export class RadioSystem {
     if (!this._isOnFrequency(sigFreq)) return;
 
     const snr = this._calculateSNR(signal);
-    const sigWpm = signal.timing?.wpm;
+    const sigWpm = this.wpmOverride || signal.timing?.wpm;
     const timings = this.morse.encodeToTimings(signal.content?.plain_text || '', sigWpm);
     // Use actual audio duration + 300ms tail so repeats never overlap
     const audioDuration = timings.reduce((s, t) => s + t.duration, 0) + 300;

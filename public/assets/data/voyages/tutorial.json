@@ -40,7 +40,7 @@
       "timing": {
         "scheduled_time": 483,
         "duration_seconds": 6,
-        "wpm": 15,
+        "wpm": 10,
         "repeats": 3
       },
       "signal": { "frequency": 500, "strength": 0.9, "noise_level": 0.1 },

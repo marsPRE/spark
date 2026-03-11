@@ -19,7 +19,7 @@ export class MorseReference {
     this.scene    = scene;
     this.showMode = showMode;
     this._visible = showMode === true;
-    this._container = scene.add.container(0, 0).setDepth(100);
+    this._container = scene.add.container(0, 0).setDepth(20);
 
     this._build();
     this._setupToggle();
@@ -30,8 +30,8 @@ export class MorseReference {
     const s  = this.scene;
     const W  = 460;
     const H  = 36 + Math.ceil(CHART.length / 4) * 22 + 40;
-    const X  = 16;
-    const Y  = 38;    // upper area, left of porthole
+    const X  = 20;
+    const Y  = 50;    // overlay over porthole (left half)
 
     // Reposition container
     this._container.setPosition(X, Y);

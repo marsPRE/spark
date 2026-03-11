@@ -24,7 +24,7 @@ export class TelegraphKey {
   /** Large touch-friendly Morse key button in the workspace area. */
   _buildTouchKey() {
     const s = this.scene;
-    const cx = 1130, cy = 490;
+    const cx = 1190, cy = 280;
 
     // Outer ring
     this._touchKeyRing = s.add.circle(cx, cy, 68, 0x223344)
@@ -36,7 +36,7 @@ export class TelegraphKey {
       .setDepth(6)
       .setInteractive({ useHandCursor: true });
 
-    this._touchKeyLabel = s.add.text(cx, cy - 90, 'KEY', {
+    this._touchKeyLabel = s.add.text(cx, cy - 80, 'KEY', {
       fontSize: '13px', color: '#4488aa', fontFamily: 'monospace',
     }).setOrigin(0.5).setDepth(6);
 

@@ -76,9 +76,10 @@ All systems are instantiated in `GameScene.create()` and cross-referenced via `t
 - Build before workspace objects so it draws behind (lower depth)
 - Use deterministic PRNG (Mulberry32) for stars so they don't re-randomize on update
 - Redraw wave polygons every frame using `graphics.clear()` + `fillPoints()` — don't try to update existing geometry
-- **Circular porthole**: constants `SEA_CX=940, SEA_CY=191, SEA_R=145`; create a `Graphics` circle, call `createGeometryMask()`, apply mask to all 9 graphics layers
-- `_buildWall()`: dark rectangle behind entire upper area (y=0–356) as ship wall
-- `_buildFrame()`: draw porthole ring, 16 rivets at 22.5° intervals, cross-braces, brass rim — all at higher depth than the masked layers
+- **Circular porthole**: constants `SEA_CX=304, SEA_CY=364, SEA_R=300, SEA_W=640`; porthole fills the entire left half of the screen
+- Create a `Graphics` circle, call `createGeometryMask()`, apply mask to all 9 graphics layers
+- `_buildWall()`: dark rectangle behind entire left half as ship wall
+- `_buildFrame()`: draw porthole ring, 12 rivets at 30° intervals, brass rim — NO cross-braces (it's a ship not a submarine)
 - Stars and rain spawn within `SEA_CX ± SEA_R` / `SEA_CY ± SEA_R` bounds
 - Phaser `createGeometryMask` requires a filled shape — use `graphics.fillCircle()` not `strokeCircle()`
 
@@ -88,10 +89,20 @@ All systems are instantiated in `GameScene.create()` and cross-referenced via `t
 - Fullscreen: request `this.scale.startFullscreen()` on first `pointerdown` in MenuScene
 - Viewport meta: add `maximum-scale=1.0, user-scalable=no` to prevent pinch-zoom
 - Hidden `<input>` for keyboard: create in Logbook constructor, focus on `_startKeyCapture` — but only needed if no choice buttons; causes system keyboard to appear (undesirable on mobile when choice buttons are present)
-- **Layout** (1280×720): Left (X 0–440): FrequencyDial, WaveformDisplay; Center (X 440–840): Logbook; Right (X 840–1280): touch Morse key (cx=1130)
-- **Upper area** (Y 0–356): porthole at right (cx=940), MorseReference at left (X=16, Y=38)
-- MorseReference moved to upper-left next to porthole — keeps lower workspace clear for interactive elements
-- HUD bottom bar is at Y=692–720 — don't place interactive elements below Y≈690
+- **Three-column layout** (1280×720): Left (X 0–640): SeaView porthole; Center (X 640–960): Logbook; Right (X 960–1280): TelegraphKey + choice buttons
+- HUD action buttons (Settings, Pause, Morse Ref, Sea Chart) placed at bottom (`BY = h - 70 = 650`) — mobile browser chrome covers the top; top bar is informational only
+- Choice buttons for multiple-choice decode: 4 buttons stacked vertically at right edge (`keyCx=1190`), `btnW=156, btnH=84`
+- FrequencyDial: `DIAL_X=760, DIAL_Y=530`; WaveformDisplay: `WF_X=650, WF_Y=580, WF_W=340`
+
+## MCP / Kimi Integration
+
+- MCP server at `/home/spark/mcp-kimi/index.mjs` — wraps Kimi (Moonshot AI) API as a `call_kimi` tool
+- Uses `@modelcontextprotocol/sdk` with `McpServer` high-level API + `StdioServerTransport`
+- API key via `MOONSHOT_API_KEY` env var; base URL via `MOONSHOT_API_BASE` (default `https://api.moonshot.cn/v1`)
+- Default model: `kimi-k2-0711-preview`; 120s timeout via `AbortController`
+- Register: `claude mcp add -s user -e MOONSHOT_API_KEY=sk-... kimi -- node /home/spark/mcp-kimi/index.mjs`
+- `-s user` scope makes the tool available in all Claude Code projects
+- Tool parameters: `prompt` (required), `model`, `system_prompt`, `temperature` (0–1), `max_tokens`
 
 ## Git / WSL
 

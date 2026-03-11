@@ -2,9 +2,9 @@
  * WaveformDisplay — phosphor-green CRT waveform strip.
  * Draws signal amplitude over a 3-second rolling window.
  */
-const WF_X = 20;
-const WF_Y = 656;
-const WF_W = 380;
+const WF_X = 650;
+const WF_Y = 580;
+const WF_W = 340;
 const WF_H = 44;
 
 export class WaveformDisplay {
