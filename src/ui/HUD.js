@@ -31,8 +31,18 @@ export class HUD {
       fontSize: '14px', color: '#66aa66', fontFamily: 'monospace',
     });
 
-    this._repText = sc.add.text(w - 220, 10, 'Rep: 50  Competent', {
+    this._repText = sc.add.text(w - 280, 10, 'Rep: 50  Competent', {
       fontSize: '13px', color: '#aabb88', fontFamily: 'monospace',
+    });
+
+    // Settings button
+    const settingsBtn = sc.add.text(w - 120, 10, 'S', {
+      fontSize: '14px', color: '#8899bb', fontFamily: 'monospace',
+      backgroundColor: '#1a1a2e', padding: { x: 10, y: 2 },
+    }).setInteractive({ useHandCursor: true });
+    settingsBtn.on('pointerup', () => {
+      if (!sc.settingsPanel) return;
+      sc.settingsPanel._visible ? sc.settingsPanel.hide() : sc.settingsPanel.show();
     });
 
     // Pause button (top-right) — for touch/mobile

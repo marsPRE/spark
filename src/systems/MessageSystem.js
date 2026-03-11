@@ -2,10 +2,11 @@
  * MessageSystem — schedules, transmits, and tracks messages for a voyage.
  */
 export class MessageSystem {
-  constructor(morseEngine, radioSystem, timeSystem) {
+  constructor(morseEngine, radioSystem, timeSystem, scene) {
     this.morse  = morseEngine;
     this.radio  = radioSystem;
     this.time   = timeSystem;
+    this.scene  = scene;
 
     this.scheduled  = [];   // messages not yet transmitted
     this.active     = [];   // currently transmitting
@@ -42,9 +43,11 @@ export class MessageSystem {
       const msg = this.active[i];
       msg.elapsed += delta;
       // Use actual audio duration if RadioSystem calculated it, else fall back to JSON value
-      const durationMs = msg._audioDuration ?? (msg.timing.duration_seconds * 1000);
+      const durationMs  = msg._audioDuration ?? (msg.timing.duration_seconds * 1000);
+      const pauseMs     = this.scene?.settings?.repeatPauseMs ?? 2000;
+      const cycleDurMs  = durationMs + pauseMs;
 
-      if (msg.elapsed >= durationMs) {
+      if (msg.elapsed >= cycleDurMs) {
         msg.repeatCount++;
         if (msg.repeatCount >= (msg.timing.repeats || 1)) {
           this._endTransmission(msg, i);

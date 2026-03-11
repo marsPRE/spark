@@ -127,4 +127,20 @@ export class TelegraphKey {
   isDown() {
     return this._keyIsDown;
   }
+
+  /** Hide the touch key (during message reception). */
+  hide() {
+    this._touchKeyRing.setVisible(false);
+    this._touchKeyBtn.setVisible(false);
+    this._touchKeyBtn.disableInteractive();
+    this._touchKeyLabel.setVisible(false);
+  }
+
+  /** Show the touch key again. */
+  show() {
+    this._touchKeyRing.setVisible(true);
+    this._touchKeyBtn.setVisible(true);
+    this._touchKeyBtn.setInteractive({ useHandCursor: true });
+    this._touchKeyLabel.setVisible(true);
+  }
 }

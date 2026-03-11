@@ -1,7 +1,9 @@
 /**
- * SettingsPanel — toggled with S key.
- * Sliders for master, morse tone, and static volume.
+ * SettingsPanel — toggled with S key or HUD button.
+ * Audio sliders + WPM + Farnsworth spacing + navigation.
  */
+import { SCENES } from '../config/constants.js';
+
 export class SettingsPanel {
   constructor(scene, audioEngine) {
     this.scene  = scene;
@@ -17,15 +19,15 @@ export class SettingsPanel {
 
   _build() {
     const s  = this.scene;
-    const W  = 340;
-    const H  = 210;
+    const W  = 380;
+    const H  = 370;
     const X  = Math.round(s.scale.width  / 2 - W / 2);
-    const Y  = 370;
+    const Y  = 180;
 
     this._container = s.add.container(X, Y).setDepth(150).setVisible(false);
 
     // Background
-    const bg = s.add.rectangle(W / 2, H / 2, W, H, 0x08080f, 0.95)
+    const bg = s.add.rectangle(W / 2, H / 2, W, H, 0x08080f, 0.97)
       .setStrokeStyle(1, 0x334466);
     this._container.add(bg);
 
@@ -35,108 +37,151 @@ export class SettingsPanel {
     }).setOrigin(0.5, 0);
     this._container.add(title);
 
-    // Sliders
-    const sliderDefs = [
+    // ── Audio sliders ───────────────────────────────────────────────────────
+    const audioSliders = [
       {
-        label:   'Master Volume',
-        key:     'masterVolume',
-        gainFn:  (v) => { if (this.audio.masterGain) this.audio.masterGain.gain.value = v; },
-        default: 0.8,
-        y:       55,
+        label: 'Master Volume',
+        gainFn: (v) => { if (this.audio.masterGain) this.audio.masterGain.gain.value = v; },
+        default: 0.8, y: 50,
       },
       {
-        label:   'Morse Tone',
-        key:     'morseVolume',
-        gainFn:  (v) => { this.audio.settings && (this.audio.settings.morseVolume = v); },
-        default: 0.7,
-        y:       105,
+        label: 'Morse Tone',
+        gainFn: (v) => { this.audio.settings && (this.audio.settings.morseVolume = v); },
+        default: 0.7, y: 95,
       },
       {
-        label:   'Static / Noise',
-        key:     'staticVolume',
-        gainFn:  (v) => {
-          if (this.audio.staticGain) {
-            this.audio.staticGain.gain.value = v;
-          }
+        label: 'Static / Noise',
+        gainFn: (v) => {
+          if (this.audio.staticGain) this.audio.staticGain.gain.value = v;
           this.audio.settings && (this.audio.settings.staticVolume = v);
         },
-        default: 0.15,
-        y:       155,
+        default: 0.15, y: 140,
       },
     ];
+    audioSliders.forEach(def => this._addSlider(def, W, false));
 
-    sliderDefs.forEach(def => this._addSlider(def, W));
+    // ── Morse sliders ───────────────────────────────────────────────────────
+    const settings = this.scene.settings ?? {};
 
-    // Hint
-    const hint = s.add.text(W / 2, H - 14, 'drag sliders or click track', {
-      fontSize: '10px', color: '#334455', fontFamily: 'monospace',
-    }).setOrigin(0.5, 1);
-    this._container.add(hint);
+    this._addSlider({
+      label: 'Send WPM',
+      gainFn: (v) => {
+        const wpm = Math.round(5 + v * 20);  // 5–25 WPM
+        if (this.scene.settings) this.scene.settings.playerWpm = wpm;
+        this.scene.morseEngine?.setWPM(wpm);
+        this._wpmReadout?.setText(`${wpm}`);
+      },
+      default: ((settings.playerWpm ?? 12) - 5) / 20,
+      y: 195,
+      label2: `${settings.playerWpm ?? 12}`,
+      isWpm: true,
+    }, W, true);
+
+    this._addSlider({
+      label: 'Farnsworth Spacing',
+      gainFn: (v) => {
+        const mult = 1 + v * 3;  // 1.0×–4.0×
+        if (this.scene.settings) this.scene.settings.farnsworthMultiplier = mult;
+        this._farnReadout?.setText(`${mult.toFixed(1)}×`);
+      },
+      default: ((settings.farnsworthMultiplier ?? 1.5) - 1) / 3,
+      y: 240,
+      label2: `${(settings.farnsworthMultiplier ?? 1.5).toFixed(1)}×`,
+      isFarn: true,
+    }, W, true);
+
+    this._addSlider({
+      label: 'Repeat Pause',
+      gainFn: (v) => {
+        const ms = Math.round(500 + v * 4500);  // 0.5–5 s
+        if (this.scene.settings) this.scene.settings.repeatPauseMs = ms;
+        this._pauseReadout?.setText(`${(ms/1000).toFixed(1)}s`);
+      },
+      default: ((settings.repeatPauseMs ?? 2000) - 500) / 4500,
+      y: 285,
+      label2: `${((settings.repeatPauseMs ?? 2000)/1000).toFixed(1)}s`,
+      isPause: true,
+    }, W, true);
+
+    // ── Navigation buttons ──────────────────────────────────────────────────
+    const btnStyle = {
+      fontSize: '14px', color: '#ccddff', fontFamily: 'monospace',
+      backgroundColor: '#1a2040', padding: { x: 16, y: 8 },
+    };
+
+    const menuBtn = s.add.text(W / 2 - 60, H - 36, 'MAIN MENU', btnStyle)
+      .setOrigin(0.5).setInteractive({ useHandCursor: true });
+    menuBtn.on('pointerover', () => menuBtn.setColor('#ffffff'));
+    menuBtn.on('pointerout',  () => menuBtn.setColor('#ccddff'));
+    menuBtn.on('pointerup',   () => {
+      this.hide();
+      this.scene.scene.stop(SCENES.GAME);
+      this.scene.scene.start(SCENES.MENU);
+    });
+    this._container.add(menuBtn);
+
+    const closeBtn = s.add.text(W / 2 + 70, H - 36, 'CLOSE', btnStyle)
+      .setOrigin(0.5).setInteractive({ useHandCursor: true });
+    closeBtn.on('pointerover', () => closeBtn.setColor('#ffffff'));
+    closeBtn.on('pointerout',  () => closeBtn.setColor('#ccddff'));
+    closeBtn.on('pointerup',   () => this.hide());
+    this._container.add(closeBtn);
   }
 
-  _addSlider({ label, gainFn, default: defaultVal, y }, panelW) {
+  _addSlider({ label, gainFn, default: defaultVal, y, label2, isWpm, isFarn, isPause }, panelW, isMorse) {
     const s       = this.scene;
     const trackX  = 20;
     const trackW  = panelW - 40;
     const trackH  = 6;
     const knobR   = 9;
+    const color   = isMorse ? 0x44aa88 : 0x2255aa;
+    const fillCol = isMorse ? 0x44aa88 : 0x2255aa;
 
-    // Label
     const lbl = s.add.text(trackX, y - 18, label, {
       fontSize: '12px', color: '#aabbcc', fontFamily: 'monospace',
     });
     this._container.add(lbl);
 
-    // Value readout
-    const readout = s.add.text(panelW - trackX, y - 18,
-      `${Math.round(defaultVal * 100)}%`, {
-        fontSize: '12px', color: '#00ff88', fontFamily: 'monospace',
-      }).setOrigin(1, 0);
+    const readout = s.add.text(panelW - trackX, y - 18, label2 ?? `${Math.round(defaultVal * 100)}%`, {
+      fontSize: '12px', color: '#00ff88', fontFamily: 'monospace',
+    }).setOrigin(1, 0);
     this._container.add(readout);
 
-    // Track background
+    if (isWpm)   this._wpmReadout   = readout;
+    if (isFarn)  this._farnReadout  = readout;
+    if (isPause) this._pauseReadout = readout;
+
     const track = s.add.rectangle(
       trackX + trackW / 2, y + trackH / 2, trackW, trackH, 0x223344
     ).setStrokeStyle(1, 0x334466);
     this._container.add(track);
 
-    // Fill
     const fill = s.add.rectangle(
-      trackX, y + trackH / 2, trackW * defaultVal, trackH, 0x2255aa
+      trackX, y + trackH / 2, trackW * defaultVal, trackH, fillCol
     ).setOrigin(0, 0.5);
     this._container.add(fill);
 
-    // Knob
     const knobX = trackX + trackW * defaultVal;
-    const knob  = s.add.circle(knobX, y + trackH / 2, knobR, 0x4488ff)
+    const knob  = s.add.circle(knobX, y + trackH / 2, knobR, color)
       .setInteractive({ draggable: true, useHandCursor: true });
     this._container.add(knob);
 
-    // Click on track to jump value
     track.setInteractive({ useHandCursor: true });
     track.on('pointerdown', (ptr) => {
-      // ptr is in world space; adjust for container offset
-      const contX = this._container.x;
-      const rawX  = ptr.x - contX;
-      const t     = Phaser.Math.Clamp((rawX - trackX) / trackW, 0, 1);
+      const t = Phaser.Math.Clamp((ptr.x - this._container.x - trackX) / trackW, 0, 1);
       this._applySlider(t, knob, fill, readout, gainFn, trackX, trackW, trackH);
     });
 
-    // Drag knob
     s.input.setDraggable(knob);
     knob.on('drag', (ptr, dragX) => {
-      const contX = this._container.x;
-      const t     = Phaser.Math.Clamp((dragX - trackX) / trackW, 0, 1);
+      const t = Phaser.Math.Clamp((dragX - trackX) / trackW, 0, 1);
       this._applySlider(t, knob, fill, readout, gainFn, trackX, trackW, trackH);
     });
-
-    this._sliders.push({ gainFn, default: defaultVal });
   }
 
-  _applySlider(t, knob, fill, readout, gainFn, trackX, trackW, trackH) {
-    knob.x   = trackX + trackW * t;
+  _applySlider(t, knob, fill, readout, gainFn, trackX, trackW) {
+    knob.x     = trackX + trackW * t;
     fill.width = trackW * t;
-    readout.setText(`${Math.round(t * 100)}%`);
     gainFn(t);
   }
 
@@ -144,8 +189,7 @@ export class SettingsPanel {
 
   _setupToggle() {
     this.scene.input.keyboard.on('keydown-S', () => {
-      this._visible = !this._visible;
-      this._container.setVisible(this._visible);
+      this._visible ? this.hide() : this.show();
     });
   }
 

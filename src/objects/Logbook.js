@@ -99,6 +99,7 @@ export class Logbook {
     this._typedText = '';
     this._cursorPos = 0;
     this._mode      = 'decoding';
+    this._hideTelegraphKey();  // hide telegraph key to show choice buttons
     this._refreshAll();
     this._startKeyCapture();
 
@@ -108,8 +109,12 @@ export class Logbook {
     const repeats = message.timing?.repeats || 1;
 
     // Calculate one-play duration from actual timings
+    const farnMult = this.scene.settings?.farnsworthMultiplier ?? 1.0;
     const timings  = this.scene.morseEngine.encodeToTimings(text, wpm);
-    const playDur  = timings.reduce((s, t) => s + t.duration, 0) + 300;
+    const baseDur  = timings.reduce((s, t) => s + t.duration, 0) + 300;
+    // Farnsworth adds extra gaps — estimate stretched duration
+    const pauseMs  = this.scene.settings?.repeatPauseMs ?? 2000;
+    const playDur  = baseDur + pauseMs;  // full cycle including pause
 
     this._scheduleAllRepeats(text, wpm, repeats, playDur);
   }
@@ -225,22 +230,33 @@ export class Logbook {
     });
 
     // ── Choice buttons (touch decode) ──────────────────────────────────────────
-    // Row 1 (4 choices) at A+R.text = 588, Row 2 (SPC+DEL) at +34
-    // These areas are empty during decoding mode (targetText/abbrText are hidden)
+    // Positioned at the telegraph key location (right side of screen)
+    // Telegraph key is hidden during decoding to make room for these buttons
     this._choiceBtns = [];
-    const btnH = 30, btnGap = 6;
-    const btnY  = A + R.text;           // 572+16 = 588 — inside panel, well clear of HUD
-    const btnY2 = btnY + btnH + btnGap; // 624
-    const btnStartX = X + PAD;
-    const btnW = 88;                    // 4×88 + 3×6 = 370px
+    const btnH = 100, btnGap = 20;
+    const btnW = 120;
+    // Center around the telegraph key position (1130, 490)
+    const keyCx = 1130, keyCy = 490;
+    const btnY1 = keyCy - 110;  // top row (higher, no space button below)
+    const btnY2 = keyCy + 10;   // bottom row (centered vertically)
+    const btnX1 = keyCx - btnW - btnGap / 2;  // left column
+    const btnX2 = keyCx + btnGap / 2;         // right column
+
+    // 4 choice buttons in 2x2 grid
+    const btnPositions = [
+      { x: btnX1 + btnW / 2, y: btnY1 + btnH / 2 },
+      { x: btnX2 + btnW / 2, y: btnY1 + btnH / 2 },
+      { x: btnX1 + btnW / 2, y: btnY2 + btnH / 2 },
+      { x: btnX2 + btnW / 2, y: btnY2 + btnH / 2 },
+    ];
 
     for (let i = 0; i < 4; i++) {
-      const bx = btnStartX + i * (btnW + btnGap) + btnW / 2;
-      const bg = s.add.rectangle(bx, btnY + btnH / 2, btnW, btnH, 0x1a2a40)
-        .setStrokeStyle(1, 0x4488aa).setInteractive({ useHandCursor: true })
+      const pos = btnPositions[i];
+      const bg = s.add.rectangle(pos.x, pos.y, btnW, btnH, 0x1a2a40)
+        .setStrokeStyle(2, 0x4488aa).setInteractive({ useHandCursor: true })
         .setDepth(10).setVisible(false);
-      const label = s.add.text(bx, btnY + btnH / 2, '', {
-        fontSize: '18px', color: '#ccddff', fontFamily: 'monospace',
+      const label = s.add.text(pos.x, pos.y, '', {
+        fontSize: '28px', color: '#ccddff', fontFamily: 'monospace',
       }).setOrigin(0.5).setDepth(11).setVisible(false);
       bg.on('pointerup', () => {
         if (this._mode !== 'decoding') return;
@@ -255,45 +271,21 @@ export class Logbook {
         } else {
           this._typedText += ch;
         }
-        this._cursorPos = this._typedText.length;
+        // Keep cursor at current position (shows active char), or advance if at end
+        const nextIdxPos = this._charIndexToStringPos(this._currentCharIndex + 1);
+        this._cursorPos = Math.min(nextIdxPos, this._typedText.length);
         this._hiddenInput.value = this._typedText;
         this._refreshInput();
       });
       this._choiceBtns.push({ bg, label });
     }
 
-    // SPC and DEL on second row
-    const spcBg = s.add.rectangle(btnStartX + 44, btnY2 + btnH / 2, 88, btnH, 0x1a1a2e)
-      .setStrokeStyle(1, 0x556688).setInteractive({ useHandCursor: true })
-      .setDepth(10).setVisible(false);
-    const spcLbl = s.add.text(btnStartX + 44, btnY2 + btnH / 2, 'SPACE', {
-      fontSize: '13px', color: '#8899bb', fontFamily: 'monospace',
-    }).setOrigin(0.5).setDepth(11).setVisible(false);
-    spcBg.on('pointerup', () => {
-      if (this._mode !== 'decoding') return;
-      this._typedText += ' ';
-      this._cursorPos = this._typedText.length;
-      this._hiddenInput.value = this._typedText;
-      this._refreshInput();
-      this._updateChoiceButtons();
-    });
-    this._spaceBtn = { bg: spcBg, label: spcLbl };
+    // No SPACE button - spaces are inserted automatically
+    this._spaceBtn = { bg: null, label: null };
 
-    const delBg = s.add.rectangle(btnStartX + 140, btnY2 + btnH / 2, 88, btnH, 0x1a1a2e)
-      .setStrokeStyle(1, 0x885566).setInteractive({ useHandCursor: true })
-      .setDepth(10).setVisible(false);
-    const delLbl = s.add.text(btnStartX + 140, btnY2 + btnH / 2, '◄ DEL', {
-      fontSize: '13px', color: '#bb8899', fontFamily: 'monospace',
-    }).setOrigin(0.5).setDepth(11).setVisible(false);
-    delBg.on('pointerup', () => {
-      if (this._mode !== 'decoding' || !this._typedText) return;
-      this._typedText = this._typedText.slice(0, -1);
-      this._cursorPos = this._typedText.length;
-      this._hiddenInput.value = this._typedText;
-      this._refreshInput();
-      this._updateChoiceButtons();
-    });
-    this._bkspBtn = { bg: delBg, label: delLbl };
+    // No DEL button - corrections happen by re-selecting the correct letter
+    // during the next repeat pass (overwrites the character at same position)
+    this._bkspBtn = { bg: null, label: null };
 
     // Cursor blink timer
     s.time.addEvent({
@@ -347,8 +339,9 @@ export class Logbook {
     const dit      = 1200 / (wpm || 12);
     const dah      = 3 * dit;
     const intra    = dit;
-    const inter    = 3 * dit;
-    const wordGap  = 7 * dit;
+    const farnMult = this.scene.settings?.farnsworthMultiplier ?? 1.0;
+    const inter    = 3 * dit * farnMult;
+    const wordGap  = 7 * dit * farnMult;
 
     const chars = text.toUpperCase().split('');
     let ms = 0;
@@ -358,16 +351,14 @@ export class Logbook {
       const char = chars[i];
 
       if (char === ' ') {
-        // Auto-insert space only on first pass
-        if (isFirstPass) {
-          const spaceAt = offset + ms;
-          this._charTimers.push(setTimeout(() => {
-            if (this._mode !== 'decoding') return;
-            this._typedText += ' ';
-            this._cursorPos = this._typedText.length;
-            this._refreshInput();
-          }, spaceAt));
-        }
+        // Auto-insert space on every pass (always automatic, never manual)
+        const spaceAt = offset + ms;
+        this._charTimers.push(setTimeout(() => {
+          if (this._mode !== 'decoding') return;
+          this._typedText += ' ';
+          this._cursorPos = this._typedText.length;
+          this._refreshInput();
+        }, spaceAt));
         ms += wordGap;
         continue;
       }
@@ -382,15 +373,41 @@ export class Logbook {
       }
 
       const showAt = offset + ms + dit;
+      const hideAt = offset + ms + charDur + inter - dit; // hide shortly before next char
       const c = char;
       const idx = charIndex;
+
+      // Show buttons for this character
       this._charTimers.push(setTimeout(() => {
         if (this._mode !== 'decoding') return;
         this._currentExpectedChar = c;
         this._currentCharIndex = idx;
         this._updateChoiceButtons();
         this._setChoiceVisible(true);
+        // Move cursor to current position (for repeats - shows which char is active)
+        const targetPos = this._charIndexToStringPos(idx);
+        this._cursorPos = Math.min(targetPos, this._typedText.length);
+        this._refreshInput();
       }, showAt));
+
+      // If player hasn't pressed anything by the time window closes, insert underscore
+      // (only for actual characters, not spaces - spaces are auto-inserted above)
+      this._charTimers.push(setTimeout(() => {
+        if (this._mode !== 'decoding') return;
+        // Check if this position still needs a character (not yet filled)
+        const pos = this._charIndexToStringPos(idx);
+        if (pos >= this._typedText.length) {
+          // Nothing entered yet - insert placeholder underscore
+          this._typedText += '_';
+          this._cursorPos = this._typedText.length;
+          this._hiddenInput.value = this._typedText;
+          this._refreshInput();
+        }
+        // Hide buttons briefly before next char appears
+        if (i < chars.length - 1 && chars[i + 1] !== ' ') {
+          this._setChoiceVisible(false);
+        }
+      }, hideAt));
 
       ms += charDur + inter;
       charIndex++;
@@ -416,11 +433,20 @@ export class Logbook {
     this._choiceBtns.forEach(b => {
       b.bg.setVisible(visible);
       b.label.setVisible(visible);
+      visible ? b.bg.setInteractive({ useHandCursor: true }) : b.bg.disableInteractive();
     });
-    this._spaceBtn.bg.setVisible(false);
-    this._spaceBtn.label.setVisible(false);
-    this._bkspBtn.bg.setVisible(false);
-    this._bkspBtn.label.setVisible(false);
+  }
+
+  _hideTelegraphKey() {
+    if (this.scene.telegraphKey) {
+      this.scene.telegraphKey.hide();
+    }
+  }
+
+  _showTelegraphKey() {
+    if (this.scene.telegraphKey) {
+      this.scene.telegraphKey.show();
+    }
   }
 
   // ─── DECODING mode ───────────────────────────────────────────────────────────
@@ -483,6 +509,7 @@ export class Logbook {
   _submitDecode() {
     this._clearCharTimers();
     this._stopKeyCapture();
+    this._showTelegraphKey();  // show telegraph key again
 
     const result   = this.scene.messageSystem?.submitDecoding(
       this._activeMsg.id, this._typedText
@@ -534,6 +561,9 @@ export class Logbook {
     this._txTarget  = suggested;
     this._txKeyed   = '';
     this._mode      = 'transmitting';
+
+    // Re-enable telegraph key (was disabled during decoding)
+    this.scene.telegraphKey?._enableSpace?.();
 
     // Show what to send
     this._modeLabel.setText('SEND THIS IN MORSE:');
@@ -624,6 +654,7 @@ export class Logbook {
     this._txKeyed   = '';
     this._hiddenInput.blur();
     this._setChoiceVisible(false);
+    this._showTelegraphKey();  // show telegraph key again
     this._refreshAll();
   }
 

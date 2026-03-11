@@ -39,7 +39,7 @@ export class GameScene extends Phaser.Scene {
     this.weatherSystem = new WeatherSystem(this);
     this.radioSystem = new RadioSystem(this.audioEngine, this.morseEngine);
     this.messageSystem = new MessageSystem(
-      this.morseEngine, this.radioSystem, this.timeSystem
+      this.morseEngine, this.radioSystem, this.timeSystem, this
     );
     this.navigationSystem = new NavigationSystem(this);
     this.scoringSystem = new ScoringSystem(this);
@@ -58,6 +58,14 @@ export class GameScene extends Phaser.Scene {
     // Set difficulty
     this._difficultyKey = voyageData?.difficulty || 'CADET';
     const diff = DIFFICULTY[this._difficultyKey];
+
+    // Central settings object — read by Logbook, MessageSystem, SettingsPanel
+    this.settings = {
+      playerWpm:            diff.wpm,
+      farnsworthMultiplier: 1.5,   // inter-char/word gaps multiplied by this
+      repeatPauseMs:        2000,  // ms pause between message repetitions
+    };
+
     this.morseEngine.setWPM(diff.wpm);
 
     // Restore saved state (time, score, completed messages)
