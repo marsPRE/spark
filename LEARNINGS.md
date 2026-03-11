@@ -71,11 +71,16 @@ All systems are instantiated in `GameScene.create()` and cross-referenced via `t
 - `_disabled` must be initialized to `false` in constructor
 - Touch key: large circle button built in `_buildTouchKey()` using `pointerdown`/`pointerup`/`pointerout` events — mirrors SPACE key logic exactly. Position at right edge (X≈1130) to avoid overlap with logbook and MorseReference
 
-## SeaView
+## SeaView (Porthole)
 
 - Build before workspace objects so it draws behind (lower depth)
 - Use deterministic PRNG (Mulberry32) for stars so they don't re-randomize on update
 - Redraw wave polygons every frame using `graphics.clear()` + `fillPoints()` — don't try to update existing geometry
+- **Circular porthole**: constants `SEA_CX=940, SEA_CY=191, SEA_R=145`; create a `Graphics` circle, call `createGeometryMask()`, apply mask to all 9 graphics layers
+- `_buildWall()`: dark rectangle behind entire upper area (y=0–356) as ship wall
+- `_buildFrame()`: draw porthole ring, 16 rivets at 22.5° intervals, cross-braces, brass rim — all at higher depth than the masked layers
+- Stars and rain spawn within `SEA_CX ± SEA_R` / `SEA_CY ± SEA_R` bounds
+- Phaser `createGeometryMask` requires a filled shape — use `graphics.fillCircle()` not `strokeCircle()`
 
 ## Mobile / Responsive
 
@@ -84,7 +89,8 @@ All systems are instantiated in `GameScene.create()` and cross-referenced via `t
 - Viewport meta: add `maximum-scale=1.0, user-scalable=no` to prevent pinch-zoom
 - Hidden `<input>` for keyboard: create in Logbook constructor, focus on `_startKeyCapture` — but only needed if no choice buttons; causes system keyboard to appear (undesirable on mobile when choice buttons are present)
 - **Layout** (1280×720): Left (X 0–440): FrequencyDial, WaveformDisplay; Center (X 440–840): Logbook; Right (X 840–1280): touch Morse key (cx=1130)
-- MorseReference: anchor at X=16 (left-aligned) so it doesn't overlap the logbook
+- **Upper area** (Y 0–356): porthole at right (cx=940), MorseReference at left (X=16, Y=38)
+- MorseReference moved to upper-left next to porthole — keeps lower workspace clear for interactive elements
 - HUD bottom bar is at Y=692–720 — don't place interactive elements below Y≈690
 
 ## Git / WSL
