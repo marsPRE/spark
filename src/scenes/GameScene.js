@@ -125,14 +125,13 @@ export class GameScene extends Phaser.Scene {
       this.scene.launch(SCENES.PAUSE);
     });
 
+    // Create settings panel immediately so HUD button works on first tap
+    this.settingsPanel = new SettingsPanel(this, this.audioEngine);
+
     // Initialise audio on first pointer or key interaction
     const initAudio = () => {
       this.audioEngine.init();
       this.audioEngine.ensureRunning();
-      // Settings panel needs audio initialised so gain nodes exist
-      if (!this.settingsPanel) {
-        this.settingsPanel = new SettingsPanel(this, this.audioEngine);
-      }
     };
     this.input.once('pointerdown', initAudio);
     this.input.keyboard.once('keydown', initAudio);
