@@ -35,11 +35,13 @@ export class HUD {
       fontSize: '13px', color: '#aabb88', fontFamily: 'monospace',
     });
 
-    // Settings button
-    const settingsBtn = sc.add.text(w - 120, 10, 'S', {
-      fontSize: '14px', color: '#8899bb', fontFamily: 'monospace',
-      backgroundColor: '#1a1a2e', padding: { x: 10, y: 2 },
+    // Settings / Menu button
+    const settingsBtn = sc.add.text(w - 130, 10, '⚙ MENU', {
+      fontSize: '13px', color: '#aabbcc', fontFamily: 'monospace',
+      backgroundColor: '#1a2030', padding: { x: 8, y: 2 },
     }).setInteractive({ useHandCursor: true });
+    settingsBtn.on('pointerover', () => settingsBtn.setColor('#ffffff'));
+    settingsBtn.on('pointerout',  () => settingsBtn.setColor('#aabbcc'));
     settingsBtn.on('pointerup', () => {
       if (!sc.settingsPanel) return;
       sc.settingsPanel._visible ? sc.settingsPanel.hide() : sc.settingsPanel.show();

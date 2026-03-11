@@ -31,7 +31,7 @@ export class MorseReference {
     const W  = 460;
     const H  = 36 + Math.ceil(CHART.length / 4) * 22 + 40;
     const X  = 16;
-    const Y  = 356;   // anchored in workspace area, below sea view
+    const Y  = 38;    // upper area, left of porthole
 
     // Reposition container
     this._container.setPosition(X, Y);
