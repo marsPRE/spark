@@ -227,17 +227,17 @@ export class Logbook {
     }).setVisible(false);
 
     this._inputDisplay = s.add.text(X + PAD, A + R.typed, '', {
-      fontSize: '14px', color: '#00ff88', fontFamily: 'monospace',
+      fontSize: '18px', color: '#00ff88', fontFamily: 'monospace',
       wordWrap: { width: W - PAD * 2 },
     }).setVisible(false);
 
     this._resultText = s.add.text(X + PAD, A + R.result, '', {
-      fontSize: '13px', fontFamily: 'monospace',
+      fontSize: '16px', fontFamily: 'monospace',
       wordWrap: { width: W - PAD * 2 },
     }).setVisible(false);
 
     this._hintText = s.add.text(X + PAD, A + R.hint, '', {
-      fontSize: '11px', color: '#556688', fontFamily: 'monospace',
+      fontSize: '14px', color: '#556688', fontFamily: 'monospace',
     }).setVisible(false);
 
     // Submit button (touch-friendly, replaces ENTER key)
@@ -254,16 +254,16 @@ export class Logbook {
     // Positioned at the telegraph key location (right side of screen)
     // Telegraph key is hidden during decoding to make room for these buttons
     this._choiceBtns = [];
-    const btnW = 156, btnH = 84, btnGap = 10;  // 20% larger
+    const btnW = 172, btnH = 92, btnGap = 12;  // 10% larger + more gap
     // Center around the telegraph key position (1190, 280)
     const keyCx = 1190, keyCy = 280;
 
     // 4 choice buttons stacked vertically
     const btnPositions = [
-      { x: keyCx, y: keyCy - 110 },  // top
+      { x: keyCx, y: keyCy - 125 },  // top
       { x: keyCx, y: keyCy - 30 },   // upper-middle
-      { x: keyCx, y: keyCy + 50 },   // lower-middle
-      { x: keyCx, y: keyCy + 130 },  // bottom
+      { x: keyCx, y: keyCy + 65 },   // lower-middle
+      { x: keyCx, y: keyCy + 160 },  // bottom
     ];
 
     for (let i = 0; i < 4; i++) {
@@ -272,7 +272,7 @@ export class Logbook {
         .setStrokeStyle(2, 0x4488aa).setInteractive({ useHandCursor: true })
         .setDepth(10).setVisible(false);
       const label = s.add.text(pos.x, pos.y, '', {
-        fontSize: '28px', color: '#ccddff', fontFamily: 'monospace',
+        fontSize: '32px', color: '#ccddff', fontFamily: 'monospace',
       }).setOrigin(0.5).setDepth(11).setVisible(false);
       bg.on('pointerup', () => {
         if (this._mode !== 'decoding') return;
@@ -447,8 +447,8 @@ export class Logbook {
         // Hide when next character ends (overlap - next char's buttons will show immediately)
         hideAt = offset + charData[i + 1].endMs;
       } else {
-        // Last character - stay visible for configured duration
-        hideAt = showAt + Math.max(buttonDisplayMs, 500); // at least 500ms for last char
+        // Last character - stay visible longer so player has time to react
+        hideAt = showAt + Math.max(buttonDisplayMs, 1200); // at least 1200ms (1.2s) for last char
       }
 
       // Show buttons when this character's audio ends
@@ -483,7 +483,7 @@ export class Logbook {
     this._charTimers.push(setTimeout(() => {
       if (this._mode !== 'decoding') return;
       this._setChoiceVisible(false);
-    }, offset + lastCharEnd + Math.max(buttonDisplayMs, 500) + 100));
+    }, offset + lastCharEnd + Math.max(buttonDisplayMs, 1200) + 100));
   }
 
   _updateChoiceButtons() {

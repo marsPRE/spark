@@ -190,18 +190,18 @@ export class SettingsPanel {
     const s       = this.scene;
     const trackX  = 20;
     const trackW  = panelW - 40;
-    const trackH  = 6;
-    const knobR   = 9;
+    const trackH  = 12;  // Larger for touch (was 6)
+    const knobR   = 16;  // Larger knob for touch (was 9)
     const color   = isMorse ? 0x44aa88 : 0x2255aa;
     const fillCol = isMorse ? 0x44aa88 : 0x2255aa;
 
-    const lbl = s.add.text(trackX, y - 18, label, {
-      fontSize: '12px', color: '#aabbcc', fontFamily: 'monospace',
+    const lbl = s.add.text(trackX, y - 24, label, {
+      fontSize: '14px', color: '#aabbcc', fontFamily: 'monospace',
     });
     this._container.add(lbl);
 
-    const readout = s.add.text(panelW - trackX, y - 18, label2 ?? `${Math.round(defaultVal * 100)}%`, {
-      fontSize: '12px', color: '#00ff88', fontFamily: 'monospace',
+    const readout = s.add.text(panelW - trackX, y - 24, label2 ?? `${Math.round(defaultVal * 100)}%`, {
+      fontSize: '14px', color: '#00ff88', fontFamily: 'monospace',
     }).setOrigin(1, 0);
     this._container.add(readout);
 
@@ -226,15 +226,22 @@ export class SettingsPanel {
       .setInteractive({ draggable: true, useHandCursor: true });
     this._container.add(knob);
 
-    track.setInteractive({ useHandCursor: true });
-    track.on('pointerdown', (ptr) => {
+    // Larger invisible touch area for better mobile interaction
+    const touchArea = s.add.rectangle(
+      trackX + trackW / 2, y + trackH / 2, trackW, 44, 0x000000, 0
+    ).setInteractive({ useHandCursor: true });
+    this._container.add(touchArea);
+
+    touchArea.on('pointerdown', (ptr) => {
       const t = Phaser.Math.Clamp((ptr.x - this._container.x - trackX) / trackW, 0, 1);
       this._applySlider(t, knob, fill, readout, gainFn, trackX, trackW, trackH);
     });
 
     s.input.setDraggable(knob);
     knob.on('drag', (ptr, dragX) => {
-      const t = Phaser.Math.Clamp((dragX - trackX) / trackW, 0, 1);
+      // Use pointer position for more accurate touch tracking
+      const worldX = ptr.x - this._container.x;
+      const t = Phaser.Math.Clamp((worldX - trackX) / trackW, 0, 1);
       this._applySlider(t, knob, fill, readout, gainFn, trackX, trackW, trackH);
     });
   }
