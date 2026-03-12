@@ -896,9 +896,9 @@ export class Logbook {
       content += `To:       ${entry.receiver.callsign}${entry.receiver.shipName ? ' (' + entry.receiver.shipName + ')' : ''}\n`;
     }
     content += '\n';
-    content += `Message:\n${entry.text}`;
+    content += `Message:\n${this._annotateForPopup(entry.text)}`;
     if (entry.playerDecode && entry.playerDecode !== entry.text) {
-      content += `\n\nYour decode:\n${entry.playerDecode}`;
+      content += `\n\nYour decode:\n${this._annotateForPopup(entry.playerDecode)}`;
     }
     if (entry.accuracy !== undefined) {
       const accColor = entry.accuracy >= 80 ? '✓' : entry.accuracy >= 50 ? '~' : '✗';
@@ -908,6 +908,34 @@ export class Logbook {
     this._logPopup.content.setText(content);
     this._logPopup.container.setVisible(true);
     this._logPopup.visible = true;
+  }
+
+  _annotateForPopup(text) {
+    const qCache = this.scene.cache?.json?.get('q_codes') ?? {};
+    
+    const ABBR = {
+      DE: 'from', K: 'over', KN: 'over (specific)', AR: 'end of message',
+      SK: 'end of contact', BT: 'break', SOS: 'DISTRESS', CQ: 'all stations',
+      CQD: 'DISTRESS (old)', R: 'received', QSL: 'acknowledged',
+      TNX: 'thanks', TKS: 'thanks', UR: 'your', HR: 'here', ES: 'and',
+      NR: 'number', PSE: 'please', RPT: 'repeat', WX: 'weather',
+      QTH: 'position', QRM: 'interference', QRN: 'static',
+      QRT: 'stop tx', QRV: 'ready', QRZ: 'who calls?',
+      QSO: 'in contact', QSY: 'change freq', QTR: 'time',
+      QSL: 'acknowledged', QRX: 'stand by', QRS: 'slow down',
+      QRQ: 'speed up', QNB: 'all present?', AS: 'wait',
+      ...Object.fromEntries(
+        Object.entries(qCache).map(([k, v]) => [k, v.answer ?? ''])
+      ),
+    };
+
+    return text.toUpperCase().split(/(\s+)/).map(token => {
+      const c = token.replace(/[^A-Z0-9]/g, '');
+      if (ABBR[c]) {
+        return `${token} (${ABBR[c]})`;
+      }
+      return token;
+    }).join('');
   }
 
   _hideLogDetailPopup() {
