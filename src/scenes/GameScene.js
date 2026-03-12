@@ -154,6 +154,17 @@ export class GameScene extends Phaser.Scene {
       this.hud.clearIncomingSignal();
     };
 
+    // Wire narrative dialogs to notification system
+    this.narrativeEngine.onDialogStarted = (dialog) => {
+      const lines = dialog.lines || [];
+      const speaker = dialog.speaker || 'Bridge';
+      lines.forEach((line, i) => {
+        setTimeout(() => {
+          this.notifications.show(`[${speaker}] ${line}`, 'info');
+        }, i * 4000);
+      });
+    };
+
     // Pause key
     this.input.keyboard.on('keydown-ESC', () => {
       this.scene.pause();

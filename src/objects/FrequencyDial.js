@@ -4,8 +4,8 @@
  */
 import { FREQ_MIN, FREQ_MAX, FREQ_DISTRESS } from '../config/constants.js';
 
-const DIAL_X = 760;
-const DIAL_Y = 530;
+const DIAL_X = 770;
+const DIAL_Y = 467;
 
 export class FrequencyDial {
   constructor(scene, radioSystem) {
@@ -20,29 +20,29 @@ export class FrequencyDial {
     const s = this.scene;
 
     // Background
-    s.add.rectangle(DIAL_X, DIAL_Y, 180, 90, 0x111122)
+    s.add.rectangle(DIAL_X, DIAL_Y, 210, 100, 0x0d0d1e)
       .setStrokeStyle(1, 0x334466);
 
-    s.add.text(DIAL_X, DIAL_Y - 30, 'FREQUENCY', {
-      fontSize: '11px', color: '#556688', fontFamily: 'monospace',
+    s.add.text(DIAL_X, DIAL_Y - 36, 'FREQUENCY', {
+      fontSize: '13px', color: '#4466aa', fontFamily: 'monospace',
     }).setOrigin(0.5);
 
-    this._freqText = s.add.text(DIAL_X, DIAL_Y - 8, `${this.freq} kHz`, {
-      fontSize: '20px', color: '#00ff88', fontFamily: 'monospace',
+    this._freqText = s.add.text(DIAL_X, DIAL_Y - 10, `${this.freq} kHz`, {
+      fontSize: '26px', color: '#00ff88', fontFamily: 'monospace',
     }).setOrigin(0.5);
 
     // Up / Down buttons
     const btnStyle = {
-      fontSize: '18px', color: '#ccddff', fontFamily: 'monospace',
-      backgroundColor: '#1a2040', padding: { x: 10, y: 4 },
+      fontSize: '22px', color: '#ccddff', fontFamily: 'monospace',
+      backgroundColor: '#1a2040', padding: { x: 14, y: 6 },
     };
 
-    s.add.text(DIAL_X - 40, DIAL_Y + 22, '▼', btnStyle)
+    s.add.text(DIAL_X - 50, DIAL_Y + 26, '▼', btnStyle)
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this._adjust(-1));
 
-    s.add.text(DIAL_X + 40, DIAL_Y + 22, '▲', btnStyle)
+    s.add.text(DIAL_X + 50, DIAL_Y + 26, '▲', btnStyle)
       .setOrigin(0.5)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this._adjust(+1));

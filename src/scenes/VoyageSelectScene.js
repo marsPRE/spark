@@ -17,7 +17,7 @@ export class VoyageSelectScene extends Phaser.Scene {
 
     const voyages = [
       { id: 'tutorial', title: 'Tutorial: First Signal',  year: 1907, difficulty: 'CADET'  },
-      { id: 'voyage_01', title: 'Maiden Passage',          year: 1909, difficulty: 'CADET'  },
+      { id: 'voyage_01', title: 'Atlantic Mail',            year: 1910, difficulty: 'JUNIOR' },
     ];
 
     voyages.forEach((voyage, i) => {

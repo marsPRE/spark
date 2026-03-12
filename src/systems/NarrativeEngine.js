@@ -64,7 +64,9 @@ export class NarrativeEngine {
   _evalCondition(cond) {
     if (!cond) return false;
     switch (cond.type) {
-      case 'flag':        return this.flags[cond.flag] === cond.value;
+      case 'flag':        return cond.value === null
+                             ? this.flags[cond.flag] === undefined
+                             : this.flags[cond.flag] === cond.value;
       case 'time_after':  return (this.scene.timeSystem?.getCurrentGameMinutes?.() ?? 0) >= cond.time;
       case 'and':         return (cond.conditions || []).every(c => this._evalCondition(c));
       case 'or':          return (cond.conditions || []).some(c  => this._evalCondition(c));

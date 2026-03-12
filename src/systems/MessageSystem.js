@@ -34,6 +34,11 @@ export class MessageSystem {
     // Trigger scheduled messages
     for (const msg of this.scheduled) {
       if (msg.status === 'pending' && now >= msg.timing.scheduled_time) {
+        // Check optional condition (uses NarrativeEngine flags)
+        if (msg.condition) {
+          const ne = this.scene?.narrativeEngine;
+          if (ne && !ne._evalCondition(msg.condition)) continue;
+        }
         this._beginTransmission(msg);
       }
     }

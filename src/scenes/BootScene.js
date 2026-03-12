@@ -28,6 +28,8 @@ export class BootScene extends Phaser.Scene {
     this.load.json('port_database', '/assets/data/port_database.json');
     this.load.json('tutorial', '/assets/data/voyages/tutorial.json');
     this.load.json('voyage_01', '/assets/data/voyages/voyage_01.json');
+    this.load.json('land_irish_sea', '/assets/data/geo/land_irish_sea.geojson');
+    this.load.json('land_atlantic',  '/assets/data/geo/land_atlantic.geojson');
   }
 
   create() {

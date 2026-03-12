@@ -14,55 +14,54 @@ export class HUD {
     const h  = this.scene.scale.height;
     const sc = this.scene;
 
-    // ── Top bar (informational only) ─────────────────────────────────────────
-    sc.add.rectangle(w / 2, 18, w, 36, 0x0a0a1e)
+    // ── Top bar ───────────────────────────────────────────────────────────────
+    sc.add.rectangle(w / 2, 22, w, 44, 0x080818)
       .setStrokeStyle(1, 0x223355).setDepth(30);
 
-    this._titleText = sc.add.text(16, 8, '⚡ SPARKS', {
-      fontSize: '15px', color: '#f0c040', fontFamily: 'monospace',
+    this._titleText = sc.add.text(16, 6, 'SPARKS', {
+      fontSize: '20px', color: '#f0c040', fontFamily: 'monospace',
     }).setDepth(31);
 
-    this._timeText = sc.add.text(180, 8, 'DAY 1  08:00', {
-      fontSize: '13px', color: '#88aacc', fontFamily: 'monospace',
+    this._timeText = sc.add.text(130, 6, 'DAY 1  08:00', {
+      fontSize: '20px', color: '#aaccff', fontFamily: 'monospace',
     }).setDepth(31);
 
-    this._watchText = sc.add.text(340, 8, 'Forenoon Watch', {
-      fontSize: '13px', color: '#556688', fontFamily: 'monospace',
+    this._watchText = sc.add.text(380, 10, 'Forenoon Watch', {
+      fontSize: '14px', color: '#445566', fontFamily: 'monospace',
     }).setDepth(31);
 
-    this._weatherText = sc.add.text(510, 8, 'Clear', {
-      fontSize: '13px', color: '#66aa66', fontFamily: 'monospace',
+    this._weatherText = sc.add.text(580, 10, 'Clear', {
+      fontSize: '14px', color: '#55aa55', fontFamily: 'monospace',
     }).setDepth(31);
 
-    this._repText = sc.add.text(610, 8, 'Rep: 50', {
-      fontSize: '12px', color: '#aabb88', fontFamily: 'monospace',
+    this._repText = sc.add.text(680, 10, 'Rep: 50', {
+      fontSize: '14px', color: '#99aa77', fontFamily: 'monospace',
     }).setDepth(31);
 
-    // Signal alert (hidden by default, centre of top bar)
-    this._signalAlert = sc.add.text(w / 2, 8, '', {
-      fontSize: '13px', color: '#ff4444', fontFamily: 'monospace',
-      backgroundColor: '#330000', padding: { x: 8, y: 2 },
+    // Signal alert (centre of top bar)
+    this._signalAlert = sc.add.text(w / 2, 6, '', {
+      fontSize: '16px', color: '#ff5555', fontFamily: 'monospace',
+      backgroundColor: '#330000', padding: { x: 12, y: 4 },
     }).setOrigin(0.5, 0).setVisible(false).setDepth(32);
 
     // ── Bottom status strip ───────────────────────────────────────────────────
-    sc.add.rectangle(w / 2, h - 14, w, 28, 0x0a0a1e)
+    sc.add.rectangle(w / 2, h - 16, w, 32, 0x080818)
       .setStrokeStyle(1, 0x223355).setDepth(30);
 
-    this._statusText = sc.add.text(16, h - 22, 'Ready', {
-      fontSize: '12px', color: '#556688', fontFamily: 'monospace',
+    this._statusText = sc.add.text(18, h - 27, 'Ready', {
+      fontSize: '14px', color: '#445566', fontFamily: 'monospace',
     }).setDepth(31);
 
-    // ── Action buttons — bottom-right block, always visible ───────────────────
-    // Positioned well inside the canvas, away from browser chrome
-    const BX = 660;   // left edge of button block
-    const BY = h - 70; // just above the bottom bar
-    const btnStyle = {
-      fontSize: '14px', fontFamily: 'monospace',
-      padding: { x: 14, y: 8 },
+    // ── Action buttons — single row of 4, right panel ────────────────────────
+    const BY = 578;   // single row, bottom edge at ~620 (safe zone)
+    const btnBase = {
+      fontSize: '15px', fontFamily: 'monospace',
+      padding: { x: 14, y: 10 },
     };
 
-    const settingsBtn = sc.add.text(BX, BY, '⚙ MENU', {
-      ...btnStyle, color: '#ffdd88', backgroundColor: '#2a1a00',
+    // 1: MENU
+    const settingsBtn = sc.add.text(660, BY, '⚙ MENU', {
+      ...btnBase, color: '#ffdd88', backgroundColor: '#261500',
     }).setInteractive({ useHandCursor: true }).setDepth(32);
     settingsBtn.on('pointerover', () => settingsBtn.setColor('#ffffff'));
     settingsBtn.on('pointerout',  () => settingsBtn.setColor('#ffdd88'));
@@ -71,16 +70,22 @@ export class HUD {
       sc.settingsPanel._visible ? sc.settingsPanel.hide() : sc.settingsPanel.show();
     });
 
-    const pauseBtn = sc.add.text(BX + 130, BY, '❚❚ PAUSE', {
-      ...btnStyle, color: '#aabbdd', backgroundColor: '#0a1020',
+    // 2: SEA CHART
+    const chartBtn = sc.add.text(810, BY, '⬡ CHART', {
+      ...btnBase, color: '#88ccff', backgroundColor: '#001828',
     }).setInteractive({ useHandCursor: true }).setDepth(32);
-    pauseBtn.on('pointerup', () => {
-      sc.scene.pause();
-      sc.scene.launch('PauseScene');
+    chartBtn.on('pointerover', () => chartBtn.setColor('#ffffff'));
+    chartBtn.on('pointerout',  () => {
+      if (!sc.seaChart?._visible) chartBtn.setColor('#88ccff');
+    });
+    chartBtn.on('pointerup', () => {
+      const isVisible = sc.seaChart?.toggle();
+      chartBtn.setColor(isVisible ? '#ffff88' : '#88ccff');
     });
 
-    const morseRefBtn = sc.add.text(BX + 280, BY, 'MORSE REF', {
-      ...btnStyle, color: '#aabbcc', backgroundColor: '#0e1520',
+    // 3: MORSE REF
+    const morseRefBtn = sc.add.text(960, BY, '· — REF', {
+      ...btnBase, color: '#aabbcc', backgroundColor: '#0c1420',
     }).setInteractive({ useHandCursor: true }).setDepth(32);
     morseRefBtn.on('pointerover', () => morseRefBtn.setColor('#ffffff'));
     morseRefBtn.on('pointerout',  () => morseRefBtn.setColor('#aabbcc'));
@@ -89,20 +94,15 @@ export class HUD {
       sc.morseReference._visible ? sc.morseReference.hide() : sc.morseReference.show();
     });
 
-    const chartBtn = sc.add.text(BX + 440, BY, 'SEA CHART', {
-      ...btnStyle, color: '#aabbcc', backgroundColor: '#0e1520',
+    // 4: PAUSE
+    const pauseBtn = sc.add.text(1110, BY, '❚❚ PAUSE', {
+      ...btnBase, color: '#99aabb', backgroundColor: '#0a1020',
     }).setInteractive({ useHandCursor: true }).setDepth(32);
-    chartBtn.on('pointerover', () => chartBtn.setColor('#ffffff'));
-    chartBtn.on('pointerout',  () => {
-      if (!sc.seaChart?._visible) chartBtn.setColor('#aabbcc');
+    pauseBtn.on('pointerup', () => {
+      sc.scene.pause();
+      sc.scene.launch('PauseScene');
     });
-    chartBtn.on('pointerup', () => {
-      const isVisible = sc.seaChart?.toggle();
-      // Highlight button when chart is visible
-      chartBtn.setColor(isVisible ? '#ffff88' : '#aabbcc');
-    });
-    
-    // Store reference for external updates
+
     this._chartBtn = chartBtn;
   }
 

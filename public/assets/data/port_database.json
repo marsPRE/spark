@@ -3,5 +3,9 @@
   { "name": "Southampton", "position": { "lat": 50.9,  "lon": -1.4  }, "country": "UK" },
   { "name": "New York",    "position": { "lat": 40.7,  "lon": -74.0 }, "country": "USA" },
   { "name": "Halifax",     "position": { "lat": 44.6,  "lon": -63.6 }, "country": "Canada" },
-  { "name": "Cork",        "position": { "lat": 51.9,  "lon": -8.5  }, "country": "Ireland" }
+  { "name": "Cork",        "position": { "lat": 51.9,  "lon": -8.5  }, "country": "Ireland" },
+  { "name": "Queenstown",  "position": { "lat": 51.85, "lon": -8.29 }, "country": "Ireland" },
+  { "name": "Cape Race",   "position": { "lat": 46.66, "lon": -53.07 }, "country": "Canada" },
+  { "name": "Sandy Hook",  "position": { "lat": 40.46, "lon": -74.00 }, "country": "USA" },
+  { "name": "St. John's",  "position": { "lat": 47.56, "lon": -52.71 }, "country": "Canada" }
 ]

@@ -3,9 +3,9 @@
  * Draws signal amplitude over a 3-second rolling window.
  */
 const WF_X = 650;
-const WF_Y = 580;
-const WF_W = 340;
-const WF_H = 44;
+const WF_Y = 520;
+const WF_W = 360;
+const WF_H = 50;
 
 export class WaveformDisplay {
   constructor(scene) {

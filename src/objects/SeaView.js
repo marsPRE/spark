@@ -18,7 +18,7 @@ export const SEA_R  = 300;   // porthole radius  (fills left half)
 const SKY = {
   night: { top: 0x060614, hor: 0x0d1030 },
   dawn:  { top: 0x1a1040, hor: 0xd4703a },
-  day:   { top: 0x2a7ac8, hor: 0x87ceeb },
+  day:   { top: 0x1060b8, hor: 0x48a8d0 },
   dusk:  { top: 0x1a1040, hor: 0xd45a20 },
 };
 

@@ -38,5 +38,85 @@
     "range_nm": 150,
     "home_port": "Liverpool",
     "year_commissioned": 1907
+  },
+  {
+    "callsign": "GLD",
+    "name": "Seaforth Radio Liverpool",
+    "type": "coast_station",
+    "nationality": "British",
+    "radio_power": "5kW",
+    "range_nm": 500,
+    "home_port": "Liverpool",
+    "year_commissioned": 1901
+  },
+  {
+    "callsign": "GCK",
+    "name": "Crookhaven Radio",
+    "type": "coast_station",
+    "nationality": "British",
+    "radio_power": "2kW",
+    "range_nm": 300,
+    "home_port": "Cork",
+    "year_commissioned": 1902
+  },
+  {
+    "callsign": "MCE",
+    "name": "Cape Race Radio",
+    "type": "coast_station",
+    "nationality": "Canadian",
+    "radio_power": "10kW",
+    "range_nm": 800,
+    "home_port": "St. John's",
+    "year_commissioned": 1904
+  },
+  {
+    "callsign": "MSH",
+    "name": "Sandy Hook Radio",
+    "type": "coast_station",
+    "nationality": "American",
+    "radio_power": "5kW",
+    "range_nm": 400,
+    "home_port": "New York",
+    "year_commissioned": 1903
+  },
+  {
+    "callsign": "MPA",
+    "name": "RMS Mauretania",
+    "type": "liner",
+    "nationality": "British",
+    "radio_power": "5kW",
+    "range_nm": 400,
+    "home_port": "Liverpool",
+    "year_commissioned": 1907
+  },
+  {
+    "callsign": "MBC",
+    "name": "SS Baltic",
+    "type": "liner",
+    "nationality": "British",
+    "radio_power": "2kW",
+    "range_nm": 250,
+    "home_port": "Liverpool",
+    "year_commissioned": 1904
+  },
+  {
+    "callsign": "MLQ",
+    "name": "SS Dorina",
+    "type": "cargo",
+    "nationality": "British",
+    "radio_power": "0.5kW",
+    "range_nm": 100,
+    "home_port": "Halifax",
+    "year_commissioned": 1906
+  },
+  {
+    "callsign": "MVS",
+    "name": "MV Saint Brendan",
+    "type": "merchant",
+    "nationality": "Irish",
+    "radio_power": "1kW",
+    "range_nm": 150,
+    "home_port": "Cork",
+    "year_commissioned": 1905
   }
 ]

@@ -28,6 +28,7 @@ export class TimeSystem {
 
   loadVoyage(voyageData) {
     this.totalDays = voyageData.duration_days || 7;
+    this.timeScale = voyageData.time_scale || this.timeScale;
     this.route = voyageData.ship?.route || null;
     if (this.route) {
       this.currentPosition = { ...this.route.departure.position };
