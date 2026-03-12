@@ -15,7 +15,7 @@ import { DEFAULT_SETTINGS } from '../systems/SettingsSystem.js';
 const X   = 650;
 const Y   = 44;
 const W   = 420;
-const H   = 400;
+const H   = 370;
 const PAD = 14;
 
 // Y positions relative to the decode-area top
@@ -88,9 +88,19 @@ export class Logbook {
 
   // ─── Public API ──────────────────────────────────────────────────────────────
 
-  addEntry(timestamp, callsign, text, type = 'ROUTINE') {
+  addEntry(timestamp, callsign, text, type = 'ROUTINE', extra = {}) {
     const prefix = type === 'DISTRESS' ? '[SOS]' : type === 'URGENCY' ? '[URG]' : '[ · ]';
-    this.entries.unshift({ timestamp, callsign, text, prefix });
+    this.entries.unshift({ 
+      timestamp, 
+      callsign, 
+      text, 
+      prefix,
+      sender: extra.sender,
+      receiver: extra.receiver,
+      messageType: type,
+      accuracy: extra.accuracy,
+      playerDecode: extra.playerDecode
+    });
     if (this.entries.length > 30) this.entries.pop();
     this._refreshLog();
   }
@@ -182,24 +192,36 @@ export class Logbook {
 
     s.add.rectangle(X + W / 2, Y + 18, W, 36, 0x1a1508)
       .setStrokeStyle(1, 0x5a4a2a);
-    s.add.text(X + PAD, Y + 9, 'LOGBOOK', {
-      fontSize: '14px', color: '#a09060', fontFamily: 'monospace',
+    s.add.text(X + PAD, Y + 8, 'LOGBOOK', {
+      fontSize: '16px', color: '#a09060', fontFamily: 'monospace',
     });
 
     // Log entries (upper portion)
     const logAreaY = Y + 44;
     const logAreaH = Math.floor(H * 0.48);
     this._logLines = [];
-    const lineH    = 20;
+    this._logClickAreas = [];  // Invisible click areas for each line
+    const lineH    = 22;
     const maxLines = Math.floor(logAreaH / lineH);
     for (let i = 0; i < maxLines; i++) {
-      this._logLines.push(
-        s.add.text(X + PAD, logAreaY + i * lineH, '', {
-          fontSize: '11px', color: '#c8b070', fontFamily: 'monospace',
-          wordWrap: { width: W - PAD * 2 },
-        })
-      );
+      const line = s.add.text(X + PAD, logAreaY + i * lineH, '', {
+        fontSize: '13px', color: '#c8b070', fontFamily: 'monospace',
+        wordWrap: { width: W - PAD * 2 },
+      });
+      this._logLines.push(line);
+      
+      // Invisible click area for the entire line width
+      const clickArea = s.add.rectangle(
+        X + W/2, logAreaY + i * lineH + 10, W - PAD*2, lineH, 0x000000, 0
+      ).setInteractive({ useHandCursor: true });
+      clickArea.on('pointerover', () => line.setColor('#f0d080'));
+      clickArea.on('pointerout', () => line.setColor('#c8b070'));
+      clickArea.on('pointerup', () => this._showLogEntryDetail(i));
+      this._logClickAreas.push(clickArea);
     }
+    
+    // Create detail popup (hidden by default)
+    this._createLogDetailPopup();
 
     // Divider
     const divY = Y + 44 + logAreaH + 4;
@@ -207,44 +229,44 @@ export class Logbook {
 
     const A = divY + 8; // decode-area top
 
-    // ── Shared elements (decode + transmit) ───────────────────────────────────
+    // ── Shared elements (decode + transmit) — depth 15 to render above FreqDial
     this._modeLabel = s.add.text(X + PAD, A + R.label, '', {
-      fontSize: '11px', color: '#556688', fontFamily: 'monospace',
-    }).setVisible(false);
+      fontSize: '13px', color: '#556688', fontFamily: 'monospace',
+    }).setDepth(15).setVisible(false);
 
     this._targetText = s.add.text(X + PAD, A + R.text, '', {
-      fontSize: '12px', color: '#88aacc', fontFamily: 'monospace',
+      fontSize: '14px', color: '#88aacc', fontFamily: 'monospace',
       wordWrap: { width: W - PAD * 2 },
-    }).setVisible(false);
+    }).setDepth(15).setVisible(false);
 
     this._abbrText = s.add.text(X + PAD, A + R.abbr, '', {
-      fontSize: '11px', color: '#7a9a7a', fontFamily: 'monospace',
+      fontSize: '12px', color: '#7a9a7a', fontFamily: 'monospace',
       wordWrap: { width: W - PAD * 2 },
-    }).setVisible(false);
+    }).setDepth(15).setVisible(false);
 
     this._inputLabel = s.add.text(X + PAD, A + R.decLabel, '', {
-      fontSize: '11px', color: '#556688', fontFamily: 'monospace',
-    }).setVisible(false);
+      fontSize: '13px', color: '#556688', fontFamily: 'monospace',
+    }).setDepth(15).setVisible(false);
 
     this._inputDisplay = s.add.text(X + PAD, A + R.typed, '', {
       fontSize: '18px', color: '#00ff88', fontFamily: 'monospace',
       wordWrap: { width: W - PAD * 2 },
-    }).setVisible(false);
+    }).setDepth(15).setVisible(false);
 
     this._resultText = s.add.text(X + PAD, A + R.result, '', {
       fontSize: '16px', fontFamily: 'monospace',
       wordWrap: { width: W - PAD * 2 },
-    }).setVisible(false);
+    }).setDepth(15).setVisible(false);
 
     this._hintText = s.add.text(X + PAD, A + R.hint, '', {
       fontSize: '14px', color: '#556688', fontFamily: 'monospace',
-    }).setVisible(false);
+    }).setDepth(15).setVisible(false);
 
     // Submit button (touch-friendly, replaces ENTER key)
     this._submitBtn = s.add.text(X + W - PAD, A + R.typed, 'SEND ▶', {
       fontSize: '13px', color: '#00ff88', fontFamily: 'monospace',
       backgroundColor: '#0a2a1a', padding: { x: 8, y: 4 },
-    }).setOrigin(1, 0).setInteractive({ useHandCursor: true }).setVisible(false);
+    }).setOrigin(1, 0).setDepth(15).setInteractive({ useHandCursor: true }).setVisible(false);
     this._submitBtn.on('pointerup', () => {
       if (this._mode === 'decoding')    this._submitDecode();
       else if (this._mode === 'transmitting') this._submitTransmit();
@@ -376,16 +398,24 @@ export class Logbook {
           ms += timings[timingIdx].duration;
           timingIdx++;
         }
-        
-        // Schedule space insertion
+
+        // Schedule space insertion at the correct position (idempotent on repeats)
+        const capturedCharIndex = charIndex;
         const spaceAt = offset + ms;
         this._charTimers.push(setTimeout(() => {
           if (this._mode !== 'decoding') return;
-          this._typedText += ' ';
-          // Cursor stays at current position - don't jump to end
+          // Find the string position where the space belongs (before the next non-space char)
+          const insertPos = this._charIndexToStringPos(capturedCharIndex);
+          // Only insert if there's no space already at this position
+          const alreadyThere = insertPos > 0 && this._typedText[insertPos - 1] === ' ';
+          if (!alreadyThere) {
+            this._typedText = this._typedText.slice(0, insertPos) + ' ' + this._typedText.slice(insertPos);
+            if (this._cursorPos >= insertPos) this._cursorPos++;
+            this._hiddenInput.value = this._typedText;
+          }
           this._refreshInput();
         }, spaceAt));
-        
+
         continue;
       }
 
@@ -607,7 +637,13 @@ export class Logbook {
       this.scene.timeSystem?.getFormattedTime() ?? '--:--',
       this._activeMsg.sender.callsign,
       correct,
-      this._activeMsg.type
+      this._activeMsg.type,
+      {
+        sender: this._activeMsg.sender,
+        receiver: this._activeMsg.receiver,
+        playerDecode: this._typedText,
+        accuracy: accuracy
+      }
     );
 
     // Auto-advance: show result briefly then proceed
@@ -726,6 +762,8 @@ export class Logbook {
 
   destroy() {
     this._hiddenInput?.remove();
+    this._logClickAreas?.forEach(area => area.destroy());
+    this._logPopup?.container?.destroy();
   }
 
   // ─── Refresh helpers ─────────────────────────────────────────────────────────
@@ -762,7 +800,7 @@ export class Logbook {
 
   _refreshInput() {
     if (this._mode === 'decoding') {
-      const cursor = this._cursorVisible ? '█' : ' ';
+      const cursor = this._cursorVisible ? '█' : '▏';
       const t = this._typedText;
       const p = this._cursorPos;
       // Show cursor at current position, with a visual indicator of the active character
@@ -797,7 +835,86 @@ export class Logbook {
     this._logLines.forEach((line, i) => {
       const e = visible[i];
       line.setText(e ? `${e.prefix} ${e.timestamp} ${e.callsign}` : '');
+      // Update click area data reference
+      if (this._logClickAreas[i]) {
+        this._logClickAreas[i].entryData = e || null;
+      }
     });
+  }
+
+  _createLogDetailPopup() {
+    const s = this.scene;
+    const popupW = 480;
+    const popupH = 320;
+    const popupX = X + (W - popupW) / 2;
+    const popupY = Y + (H - popupH) / 2;
+    
+    this._logPopup = {
+      container: s.add.container(popupX, popupY).setDepth(100).setVisible(false),
+      visible: false
+    };
+    
+    // Background
+    const bg = s.add.rectangle(popupW/2, popupH/2, popupW, popupH, 0x1a1508, 0.98)
+      .setStrokeStyle(2, 0x5a4a2a);
+    this._logPopup.container.add(bg);
+    
+    // Title
+    this._logPopup.title = s.add.text(popupW/2, 15, 'MESSAGE DETAILS', {
+      fontSize: '16px', color: '#a09060', fontFamily: 'monospace'
+    }).setOrigin(0.5, 0);
+    this._logPopup.container.add(this._logPopup.title);
+    
+    // Content area
+    this._logPopup.content = s.add.text(20, 45, '', {
+      fontSize: '14px', color: '#c8b070', fontFamily: 'monospace',
+      wordWrap: { width: popupW - 40 }
+    });
+    this._logPopup.container.add(this._logPopup.content);
+    
+    // Close button
+    const closeBtn = s.add.text(popupW/2, popupH - 35, 'CLOSE', {
+      fontSize: '16px', color: '#44ff88', fontFamily: 'monospace',
+      backgroundColor: '#0a2a1a', padding: { x: 20, y: 8 }
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    closeBtn.on('pointerover', () => closeBtn.setColor('#ffffff'));
+    closeBtn.on('pointerout', () => closeBtn.setColor('#44ff88'));
+    closeBtn.on('pointerup', () => this._hideLogDetailPopup());
+    this._logPopup.container.add(closeBtn);
+    this._logPopup.closeBtn = closeBtn;
+  }
+
+  _showLogEntryDetail(lineIndex) {
+    const entry = this._logClickAreas[lineIndex]?.entryData;
+    if (!entry) return;
+    
+    // Build detailed content
+    let content = `Time:     ${entry.timestamp}\n`;
+    content += `Type:     ${entry.messageType}\n`;
+    content += `From:     ${entry.callsign}${entry.sender ? ' (' + entry.sender.shipName + ')' : ''}\n`;
+    if (entry.receiver) {
+      content += `To:       ${entry.receiver.callsign}${entry.receiver.shipName ? ' (' + entry.receiver.shipName + ')' : ''}\n`;
+    }
+    content += '\n';
+    content += `Message:\n${entry.text}`;
+    if (entry.playerDecode && entry.playerDecode !== entry.text) {
+      content += `\n\nYour decode:\n${entry.playerDecode}`;
+    }
+    if (entry.accuracy !== undefined) {
+      const accColor = entry.accuracy >= 80 ? '✓' : entry.accuracy >= 50 ? '~' : '✗';
+      content += `\n\nAccuracy: ${accColor} ${entry.accuracy}%`;
+    }
+    
+    this._logPopup.content.setText(content);
+    this._logPopup.container.setVisible(true);
+    this._logPopup.visible = true;
+  }
+
+  _hideLogDetailPopup() {
+    if (this._logPopup) {
+      this._logPopup.container.setVisible(false);
+      this._logPopup.visible = false;
+    }
   }
 
   // ─── Inline annotation ───────────────────────────────────────────────────────
