@@ -17,9 +17,9 @@ export const SEA_R  = 300;   // porthole radius  (fills left half)
 // Sky palette per time-of-day  { top, horizon }
 const SKY = {
   night: { top: 0x060614, hor: 0x0d1030 },
-  dawn:  { top: 0x1a1040, hor: 0xd4703a },
-  day:   { top: 0x1060b8, hor: 0x48a8d0 },
-  dusk:  { top: 0x1a1040, hor: 0xd45a20 },
+  dawn:  { top: 0x1a1040, hor: 0xb85830 },
+  day:   { top: 0x0a3a7a, hor: 0x2878a8 },
+  dusk:  { top: 0x1a1040, hor: 0xb04818 },
 };
 
 // Wave layer config  { baseY (fraction of porthole), amplitude, speed, color, alpha }
@@ -43,11 +43,7 @@ export class SeaView {
   // ─── Build ───────────────────────────────────────────────────────────────────
 
   _buildWall() {
-    // Ship interior wall fills the left half
-    const s = this.scene;
-    s.add.rectangle(SEA_W / 2, 360, SEA_W, 720, 0x14100a).setDepth(-1);
-    // Extra dark strip to the right of porthole ring
-    s.add.rectangle(SEA_W + 5, 360, 10, 720, 0x0a0808).setDepth(9);
+    // Wall background removed — radio_room_bg image handles this
   }
 
   _buildLayers() {

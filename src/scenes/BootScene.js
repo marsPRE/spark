@@ -21,6 +21,9 @@ export class BootScene extends Phaser.Scene {
       progress.fillRect(width / 2 - 198, height / 2 - 13, 396 * value, 26);
     });
 
+    // Load images
+    this.load.image('radio_room_bg', '/assets/images/radio_room_bg.png');
+
     // Load data files
     this.load.json('morse_table', '/assets/data/morse_table.json');
     this.load.json('q_codes', '/assets/data/q_codes.json');

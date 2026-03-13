@@ -21,24 +21,32 @@ export class TelegraphKey {
   _disableSpace() { this._disabled = true;  }
   _enableSpace()  { this._disabled = false; }
 
-  /** Large touch-friendly Morse key button in the workspace area. */
+  /** Invisible hit zone over the telegraph key in the background image. */
   _buildTouchKey() {
     const s = this.scene;
-    const cx = 1190, cy = 280;
 
-    // Outer ring
-    this._touchKeyRing = s.add.circle(cx, cy, 68, 0x223344)
-      .setStrokeStyle(3, 0x4488aa).setDepth(5);
+    // Position over the brass telegraph key in the bottom-right of the bg image
+    const cx = 1160, cy = 665;
+    const W = 220, H = 220;
 
-    // Inner button (changes color when pressed)
-    this._touchKeyBtn = s.add.circle(cx, cy, 54, 0x1a3a50)
-      .setStrokeStyle(2, 0x6699cc)
+    // Glow graphic — lights up when key is held down
+    this._touchKeyGlow = s.add.graphics().setDepth(5).setAlpha(0);
+    this._touchKeyGlow.fillStyle(0xffcc44, 0.25);
+    this._touchKeyGlow.fillRoundedRect(cx - W/2, cy - H/2, W, H, 10);
+    this._touchKeyGlow.lineStyle(2, 0xffcc44, 0.6);
+    this._touchKeyGlow.strokeRoundedRect(cx - W/2, cy - H/2, W, H, 10);
+
+    // Transparent hit zone (invisible rectangle over the image key)
+    this._touchKeyBtn = s.add.rectangle(cx, cy, W, H)
+      .setAlpha(0.001)   // near-invisible but still receives pointer events
       .setDepth(6)
       .setInteractive({ useHandCursor: true });
 
-    this._touchKeyLabel = s.add.text(cx, cy - 80, 'KEY', {
-      fontSize: '13px', color: '#4488aa', fontFamily: 'monospace',
-    }).setOrigin(0.5).setDepth(6);
+    // Subtle hint label (fades on first press)
+    this._touchKeyLabel = s.add.text(cx, cy - 46, 'SPACE / CLICK', {
+      fontSize: '11px', color: '#c8a040', fontFamily: 'monospace',
+      backgroundColor: '#1a1008', padding: { x: 6, y: 3 },
+    }).setOrigin(0.5).setDepth(7).setAlpha(0.7);
 
     // ─ pointer events ─
     this._touchKeyBtn.on('pointerdown', () => this._touchDown());
@@ -49,7 +57,11 @@ export class TelegraphKey {
   _touchDown() {
     if (this._keyIsDown || this._disabled) return;
     this._keyIsDown = true;
-    this._touchKeyBtn.setFillStyle(0x44aadd);
+    this._touchKeyGlow?.setAlpha(1);
+    // Fade hint label on first use
+    if (this._touchKeyLabel?.alpha > 0) {
+      this.scene.tweens.add({ targets: this._touchKeyLabel, alpha: 0, duration: 600 });
+    }
     const ts = performance.now();
     this.morse.onKeyDown(ts);
     this.audio.sideToneOn?.();
@@ -63,7 +75,7 @@ export class TelegraphKey {
   _touchUp() {
     if (!this._keyIsDown) return;
     this._keyIsDown = false;
-    this._touchKeyBtn.setFillStyle(0x1a3a50);
+    this._touchKeyGlow?.setAlpha(0);
     const ts = performance.now();
     this.morse.onKeyUp(ts);
     this.audio.sideToneOff?.();
@@ -81,6 +93,10 @@ export class TelegraphKey {
     spaceKey.on('down', () => {
       if (this._keyIsDown || this._disabled) return;
       this._keyIsDown = true;
+      this._touchKeyGlow?.setAlpha(1);
+      if (this._touchKeyLabel?.alpha > 0) {
+        this.scene.tweens.add({ targets: this._touchKeyLabel, alpha: 0, duration: 600 });
+      }
       const ts = performance.now();
 
       this.morse.onKeyDown(ts);
@@ -98,6 +114,7 @@ export class TelegraphKey {
     spaceKey.on('up', () => {
       if (!this._keyIsDown) return;
       this._keyIsDown = false;
+      this._touchKeyGlow?.setAlpha(0);
       const ts = performance.now();
 
       this.morse.onKeyUp(ts);
@@ -128,19 +145,14 @@ export class TelegraphKey {
     return this._keyIsDown;
   }
 
-  /** Hide the touch key (during message reception). */
+  /** Disable click input during message reception. */
   hide() {
-    this._touchKeyRing.setVisible(false);
-    this._touchKeyBtn.setVisible(false);
     this._touchKeyBtn.disableInteractive();
-    this._touchKeyLabel.setVisible(false);
+    this._touchKeyGlow?.setAlpha(0);
   }
 
-  /** Show the touch key again. */
+  /** Re-enable click input. */
   show() {
-    this._touchKeyRing.setVisible(true);
-    this._touchKeyBtn.setVisible(true);
     this._touchKeyBtn.setInteractive({ useHandCursor: true });
-    this._touchKeyLabel.setVisible(true);
   }
 }

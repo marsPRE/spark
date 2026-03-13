@@ -8,23 +8,60 @@ export class MenuScene extends Phaser.Scene {
     super({ key: SCENES.MENU });
   }
 
+  preload() {
+    // Try to load title screen image
+    this.load.image('title_screen', 'assets/images/title_screen.png');
+    
+    // Handle load error gracefully
+    this.load.on('loaderror', (file) => {
+      console.warn('Failed to load:', file.key);
+    });
+  }
+
   create() {
     const { width, height } = this.scale;
+    const hasTitleImage = this.textures.exists('title_screen');
 
-    // Title
-    this.add.text(width / 2, height / 3, '⚡ SPARKS', {
-      fontSize: '72px',
-      color: '#f0c040',
-      fontFamily: 'monospace',
-      stroke: '#000000',
-      strokeThickness: 4,
-    }).setOrigin(0.5);
-
-    this.add.text(width / 2, height / 3 + 70, 'Maritime Telegraphy', {
-      fontSize: '24px',
-      color: '#8899bb',
-      fontFamily: 'monospace',
-    }).setOrigin(0.5);
+    if (hasTitleImage) {
+      // Add title screen background
+      const bg = this.add.image(width / 2, height / 2, 'title_screen');
+      
+      // Scale to cover screen while maintaining aspect ratio
+      const scaleX = width / bg.width;
+      const scaleY = height / bg.height;
+      const scale = Math.max(scaleX, scaleY);
+      bg.setScale(scale);
+      
+      // Light overlay for better visibility (lighter = higher alpha value, 0.2 instead of 0.4)
+      this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.15);
+    } else {
+      // Fallback: dark background with gradient effect
+      this.add.rectangle(width / 2, height / 2, width, height, 0x0a0a15);
+      
+      // Decorative elements
+      for (let i = 0; i < 50; i++) {
+        this.add.circle(
+          Phaser.Math.Between(0, width),
+          Phaser.Math.Between(0, height),
+          Phaser.Math.Between(1, 2),
+          0x334455,
+          Phaser.Math.FloatBetween(0.3, 0.8)
+        );
+      }
+      
+      // Title text when no image
+      this.add.text(width / 2, height / 4, '⚡ SPARKS', {
+        fontSize: '64px',
+        color: '#f0c040',
+        fontFamily: 'monospace',
+      }).setOrigin(0.5);
+      
+      this.add.text(width / 2, height / 4 + 70, 'Maritime Telegraphy', {
+        fontSize: '22px',
+        color: '#8899bb',
+        fontFamily: 'monospace',
+      }).setOrigin(0.5);
+    }
 
     // Request fullscreen on first touch (mobile)
     this.input.once('pointerdown', () => {
@@ -32,13 +69,13 @@ export class MenuScene extends Phaser.Scene {
       this.scale.startFullscreen();
     });
 
-    // Menu buttons - repositioned to make room for SETTINGS
-    let yPos = height / 2 + 20;
+    // Menu buttons - positioned higher up
+    let yPos = height - 320;
     
     this._addButton(width / 2, yPos, 'NEW VOYAGE', () => {
       this.scene.start(SCENES.VOYAGE_SELECT);
     });
-    yPos += 50;
+    yPos += 45;
 
     const saveSystem = new SaveSystem();
     const hasSave = saveSystem.hasSave();
@@ -51,23 +88,20 @@ export class MenuScene extends Phaser.Scene {
     if (!hasSave) {
       continueBtn.setColor('#555566').setAlpha(0.5).disableInteractive();
     }
-    yPos += 50;
+    yPos += 45;
 
     this._addButton(width / 2, yPos, 'TUTORIAL', () => {
       this.scene.start(SCENES.GAME, { voyageId: 'tutorial' });
     });
-    yPos += 50;
+    yPos += 45;
 
-    // Settings button - opens settings panel
+    // Settings button
     this._addButton(width / 2, yPos, 'SETTINGS', () => {
       this._showSettings();
     });
 
-    // Create a minimal settings object for the panel (menu doesn't have full game settings)
+    // Create settings
     this.settings = {};
-    
-    // Create settings panel (hidden by default)
-    // Pass null for audioEngine since we're in menu
     this.settingsPanel = new SettingsPanel(this, null, true);
   }
 
@@ -99,15 +133,21 @@ export class MenuScene extends Phaser.Scene {
 
   _addButton(x, y, label, callback) {
     const text = this.add.text(x, y, label, {
-      fontSize: '22px',
-      color: '#ccddff',
+      fontSize: '20px',
+      color: '#ffffff',
       fontFamily: 'monospace',
-      backgroundColor: '#1a2040',
-      padding: { x: 20, y: 8 },
+      backgroundColor: '#1a2040cc',
+      padding: { x: 24, y: 10 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
-    text.on('pointerover', () => text.setColor('#ffffff'));
-    text.on('pointerout', () => text.setColor('#ccddff'));
+    text.on('pointerover', () => {
+      text.setColor('#ffffaa');
+      text.setBackgroundColor('#2a3050dd');
+    });
+    text.on('pointerout', () => {
+      text.setColor('#ffffff');
+      text.setBackgroundColor('#1a2040cc');
+    });
     text.on('pointerdown', callback);
 
     return text;

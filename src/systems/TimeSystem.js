@@ -37,9 +37,24 @@ export class TimeSystem {
     this.day = 1;
   }
 
+  setFastForward(active) {
+    this._fastForward = active;
+  }
+
+  /** Call with true while player is actively decoding/transmitting — slows to real-time. */
+  setRealTime(active) {
+    this._realTime = active;
+  }
+
   update(realDeltaMs) {
     if (this.paused) return;
-    this.gameMinutes += (realDeltaMs / 60000) * this.timeScale;
+    let scale;
+    if (this._realTime) {
+      scale = 1;  // 1:1 real-time during message interaction
+    } else {
+      scale = this._fastForward ? this.timeScale * 2 : this.timeScale;
+    }
+    this.gameMinutes += (realDeltaMs / 60000) * scale;
     this.day = Math.floor(this.gameMinutes / 1440) + 1;
     this._updatePosition();
   }

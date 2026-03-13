@@ -17,7 +17,7 @@ export class WaveformDisplay {
     this._sampleInterval = 40; // ms between samples
 
     // CRT background
-    scene.add.rectangle(WF_X + WF_W / 2, WF_Y + WF_H / 2, WF_W, WF_H, 0x001100)
+    scene.add.rectangle(WF_X + WF_W / 2, WF_Y + WF_H / 2, WF_W, WF_H, 0x001100, 0.75)
       .setStrokeStyle(1, 0x003300);
   }
 

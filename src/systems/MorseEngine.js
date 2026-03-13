@@ -30,8 +30,9 @@ export class MorseEngine {
     this._lastKeyUpTime  = null;
     this._charTimer      = null;
     this._wordTimer      = null;
-    this.onCharDecoded   = null;   // callback(char)
-    this.onWordDecoded   = null;   // callback(word)
+    this.onCharDecoded      = null;   // callback(char)
+    this.onWordDecoded      = null;   // callback(word)
+    this.onCorrectionSignal = null;   // callback() — HH (8 dots) correction
 
     // Adaptive timing — seeded from WPM, converges to player's actual speed
     this._ditEstimate   = this.timings.dit;
@@ -200,6 +201,16 @@ export class MorseEngine {
   _finalizeCharacter() {
     const syms = this.inputState.currentSymbols;
     if (!syms) return;
+
+    // HH correction signal: 8 or more dots — delete the last sent character
+    if (/^\.{8,}$/.test(syms)) {
+      this.inputState.decodedText = this.inputState.decodedText.trimEnd().slice(0, -1);
+      this.inputState.pendingChar = '';
+      this.inputState.currentSymbols = '';
+      if (this.onCorrectionSignal) this.onCorrectionSignal();
+      return;
+    }
+
     const char = REVERSE_TABLE[syms] || '?';
     this.inputState.decodedText += char;
     this.inputState.pendingChar = char;

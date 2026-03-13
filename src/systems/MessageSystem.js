@@ -114,6 +114,8 @@ export class MessageSystem {
     const result = { originalMessage: p.message, responseText, contentScore, morseScore, impact };
     this.sent.push(result);
 
+    this._applyImpact(impact);
+
     const idx = this.pendingResponses.indexOf(p);
     if (idx !== -1) this.pendingResponses.splice(idx, 1);
 
@@ -165,7 +167,18 @@ export class MessageSystem {
   _handleTimeout(pending, index) {
     const impact = pending.message.narrative_impact?.timeout || {};
     this.pendingResponses.splice(index, 1);
+    this._applyImpact(impact);
     this.onResponseTimeout?.(pending.message, impact);
+  }
+
+  _applyImpact(impact) {
+    if (!impact) return;
+    if (impact.story_flag) {
+      this.scene?.narrativeEngine?.setFlag(impact.story_flag, true);
+    }
+    if (impact.reputation) {
+      this.scene?.scoringSystem?.addReputation?.(impact.reputation);
+    }
   }
 
   _levenshteinSimilarity(a, b) {

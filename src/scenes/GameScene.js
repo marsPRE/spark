@@ -13,7 +13,6 @@ import { SaveSystem } from '../systems/SaveSystem.js';
 import { TelegraphKey } from '../objects/TelegraphKey.js';
 import { FrequencyDial } from '../objects/FrequencyDial.js';
 import { Logbook } from '../objects/Logbook.js';
-import { WaveformDisplay } from '../objects/WaveformDisplay.js';
 import { HUD } from '../ui/HUD.js';
 import { MorseReference } from '../ui/MorseReference.js';
 import { NotificationSystem } from '../ui/NotificationSystem.js';
@@ -22,6 +21,7 @@ import { SeaView } from '../objects/SeaView.js';
 import { SeaChart } from '../objects/SeaChart.js';
 import { SettingsPanel } from '../ui/SettingsPanel.js';
 import { SettingsSystem, DEFAULT_SETTINGS } from '../systems/SettingsSystem.js';
+import { NarrativeDialog } from '../ui/NarrativeDialog.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -34,6 +34,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    // Background room image — depth -1 so it sits behind porthole sky (depth 0+)
+    try {
+      const bg = this.add.image(640, 360, 'radio_room_bg').setDepth(-1);
+      const scaleX = 1280 / bg.width;
+      const scaleY = 720  / bg.height;
+      bg.setScale(Math.max(scaleX, scaleY));
+    } catch (e) {
+      console.warn('radio_room_bg not loaded:', e);
+    }
+
     // Systems
     this.morseEngine = new MorseEngine();
     this.audioEngine = new AudioEngine();
@@ -56,6 +66,7 @@ export class GameScene extends Phaser.Scene {
       this.weatherSystem.loadVoyage(voyageData);
       this.narrativeEngine.loadVoyage(voyageData);
     }
+    this._voyageData = voyageData;
 
     // Set difficulty
     this._difficultyKey = voyageData?.difficulty || 'CADET';
@@ -124,45 +135,33 @@ export class GameScene extends Phaser.Scene {
     this.telegraphKey = new TelegraphKey(this, this.morseEngine, this.audioEngine);
     this.frequencyDial = new FrequencyDial(this, this.radioSystem);
     this.logbook = new Logbook(this);
-    this.waveformDisplay = new WaveformDisplay(this);
     this.hud = new HUD(this);
     this.morseReference = new MorseReference(this, diff.showReferenceCard);
     this.notifications = new NotificationSystem(this);
     this.seaChart = new SeaChart(this);
+    if (this._voyageData) this.seaChart.setVoyage(this._voyageData);
+    this.narrativeDialog = new NarrativeDialog(this);
 
     // (Morse keying → decode display removed; logbook now has its own input mode)
 
-    // Wire radio signals → waveform
-    this.radioSystem.onSignalStart(sig => {
-      this.waveformDisplay.setSignalLevel(sig.snr ?? 0.8);
-    });
-    this.radioSystem.onSignalEnd(() => {
-      this.waveformDisplay.setSignalLevel(0);
-    });
 
     // Wire up message callbacks
     this.messageSystem.onTransmissionStarted = (msg) => {
+      this.timeSystem.setRealTime(true);   // slow to 1:1 during any transmission
       this.hud.showIncomingSignal(msg);
       this.notifications.show(
         `Incoming: ${msg.type}`,
         msg.type === 'DISTRESS' ? 'urgent' : 'info'
       );
-      // Open decode input immediately so player can type while listening
       this.logbook.startDecodeInput(msg);
     };
     this.messageSystem.onTransmissionEnded = (msg) => {
       this.hud.clearIncomingSignal();
     };
 
-    // Wire narrative dialogs to notification system
+    // Wire narrative dialogs to modal dialog (pauses time, requires acknowledge)
     this.narrativeEngine.onDialogStarted = (dialog) => {
-      const lines = dialog.lines || [];
-      const speaker = dialog.speaker || 'Bridge';
-      lines.forEach((line, i) => {
-        setTimeout(() => {
-          this.notifications.show(`[${speaker}] ${line}`, 'info');
-        }, i * 4000);
-      });
+      this.narrativeDialog.show(dialog.speaker || 'Bridge', dialog.lines || []);
     };
 
     // Pause key
@@ -223,9 +222,9 @@ export class GameScene extends Phaser.Scene {
     this.weatherSystem.update(delta);
     this.radioSystem.update(delta);
     this.messageSystem.update(delta);
+    this.narrativeEngine.update(delta);
     this.seaView.update(delta);
     this.hud.update(delta);
-    this.waveformDisplay.update(delta);
     this.seaChart?.update();
   }
 }

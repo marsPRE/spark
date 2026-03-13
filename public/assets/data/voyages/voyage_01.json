@@ -842,6 +842,126 @@
         "timeout":   { "reputation": 0, "story_flag": "" }
       },
       "time_limit": 120
+    },
+    {
+      "id": "v01_bg_01",
+      "type": "NAVIGATION",
+      "priority": 2,
+      "is_background_traffic": true,
+      "sender": {
+        "callsign": "MVK",
+        "shipName": "SS Kilkenny",
+        "position": { "lat": 52.8, "lon": -6.2 },
+        "type": "merchant"
+      },
+      "receiver": { "callsign": "GLD", "shipName": "Seaforth Radio Liverpool" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "GLD DE MVK QTH 52N 006W DEST LIVERPOOL ETA 1400 AR",
+        "decoded_meaning": "SS Kilkenny reporting position, bound Liverpool ETA 14:00"
+      },
+      "timing": { "scheduled_time": 530, "duration_seconds": 12, "wpm": 9, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.75, "noise_level": 0.15 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
+      "time_limit": 0
+    },
+    {
+      "id": "v01_bg_02",
+      "type": "ROUTINE",
+      "priority": 2,
+      "is_background_traffic": true,
+      "sender": {
+        "callsign": "MCS",
+        "shipName": "SS Celtic Star",
+        "position": { "lat": 51.2, "lon": -12.5 },
+        "type": "passenger"
+      },
+      "receiver": { "callsign": "MRC", "shipName": "SS Mauretania" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MRC DE MCS QSO PSE QTH ES WX K",
+        "decoded_meaning": "Celtic Star calling Mauretania: request your position and weather"
+      },
+      "timing": { "scheduled_time": 1440, "duration_seconds": 8, "wpm": 12, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.6, "noise_level": 0.2 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
+      "time_limit": 0
+    },
+    {
+      "id": "v01_bg_03",
+      "type": "ROUTINE",
+      "priority": 2,
+      "is_background_traffic": true,
+      "sender": {
+        "callsign": "MRC",
+        "shipName": "SS Mauretania",
+        "position": { "lat": 50.5, "lon": -18.0 },
+        "type": "passenger"
+      },
+      "receiver": { "callsign": "MCS", "shipName": "SS Celtic Star" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MCS DE MRC QTH 50N 018W WX CLEAR BRZ NW 2 K",
+        "decoded_meaning": "Mauretania: position 50N 18W, clear weather, NW breeze force 2"
+      },
+      "timing": { "scheduled_time": 1455, "duration_seconds": 10, "wpm": 12, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.55, "noise_level": 0.22 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
+      "time_limit": 0
+    },
+    {
+      "id": "v01_bg_04",
+      "type": "NAVIGATION",
+      "priority": 2,
+      "is_background_traffic": true,
+      "sender": {
+        "callsign": "WCC",
+        "shipName": "Chatham Radio",
+        "position": { "lat": 41.7, "lon": -70.0 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "ALL", "shipName": "All Stations" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "CQ DE WCC WX ADVISORY GALE WARNING N ATLANTIC 50N AR",
+        "decoded_meaning": "Chatham Radio weather advisory: gale warning north Atlantic above 50N"
+      },
+      "timing": { "scheduled_time": 4320, "duration_seconds": 12, "wpm": 10, "repeats": 3 },
+      "signal": { "frequency": 500, "strength": 0.5, "noise_level": 0.25 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
+      "time_limit": 0
+    },
+    {
+      "id": "v01_bg_05",
+      "type": "ROUTINE",
+      "priority": 2,
+      "is_background_traffic": true,
+      "sender": {
+        "callsign": "MTZ",
+        "shipName": "SS Montezuma",
+        "position": { "lat": 44.0, "lon": -45.0 },
+        "type": "cargo"
+      },
+      "receiver": { "callsign": "WCC", "shipName": "Chatham Radio" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "WCC DE MTZ QTH 44N 045W DEST SOUTHAMPTON 3 DAYS K",
+        "decoded_meaning": "SS Montezuma reporting position: 44N 45W, bound Southampton in 3 days"
+      },
+      "timing": { "scheduled_time": 6480, "duration_seconds": 11, "wpm": 10, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.45, "noise_level": 0.28 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
+      "time_limit": 0
     }
   ],
   "narrative_events": [

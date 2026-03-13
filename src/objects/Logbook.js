@@ -14,19 +14,19 @@ import { DEFAULT_SETTINGS } from '../systems/SettingsSystem.js';
 
 const X   = 650;
 const Y   = 44;
-const W   = 420;
+const W   = 380;
 const H   = 370;
 const PAD = 14;
 
-// Y positions relative to the decode-area top
+// Y positions relative to the decode-area top (Receive section)
 const R = {
   label:      0,
-  text:      16,
-  abbr:      36,
-  decLabel:  80,
-  typed:     96,
-  result:   145,
-  hint:     165,
+  text:      18,
+  abbr:      38,
+  decLabel:  72,
+  typed:     88,
+  result:   128,
+  hint:     150,
 };
 
 // ─── Morse confusable lookup ─────────────────────────────────────────────────
@@ -89,7 +89,7 @@ export class Logbook {
   // ─── Public API ──────────────────────────────────────────────────────────────
 
   addEntry(timestamp, callsign, text, type = 'ROUTINE', extra = {}) {
-    const prefix = type === 'DISTRESS' ? '[SOS]' : type === 'URGENCY' ? '[URG]' : '[ · ]';
+    const prefix = type === 'DISTRESS' ? '[SOS]' : type === 'URGENCY' ? '[URG]' : type === 'TX' ? '[→TX]' : '[ · ]';
     this.entries.unshift({ 
       timestamp, 
       callsign, 
@@ -140,12 +140,9 @@ export class Logbook {
   }
 
   _finishCurrentDecode() {
-    // Clear any pending timers
     this._clearCharTimers();
-    // Auto-submit current progress (even if incomplete)
     if (this._mode === 'decoding' && this._activeMsg) {
       this._stopKeyCapture();
-      // Don't add to logbook - just clean up
       this._reset();
     }
   }
@@ -187,32 +184,47 @@ export class Logbook {
     const s = this.scene;
     this._buildHiddenInput();
 
-    s.add.rectangle(X + W / 2, Y + H / 2, W, H, 0x0e0c08)
-      .setStrokeStyle(1, 0x5a4a2a);
+    // === MESSAGE LOG SECTION (Upper) ===
+    const logH = Math.floor(H * 0.52);
+    const logY = Y;
+    
+    // Log section background with inner shadow effect
+    s.add.rectangle(X + W / 2, logY + logH / 2, W, logH, 0x0e0c08, 0.55)
+      .setStrokeStyle(2, 0x5a4a2a);
 
-    s.add.rectangle(X + W / 2, Y + 18, W, 36, 0x1a1508)
+    // Log section inner background (slightly lighter)
+    s.add.rectangle(X + W / 2, logY + 28 + (logH - 36) / 2, W - 4, logH - 36, 0x121008, 0.48);
+
+    // Log header bar
+    s.add.rectangle(X + W / 2, logY + 16, W - 4, 28, 0x1a1508, 0.72)
       .setStrokeStyle(1, 0x5a4a2a);
-    s.add.text(X + PAD, Y + 8, 'LOGBOOK', {
-      fontSize: '16px', color: '#a09060', fontFamily: 'monospace',
+    s.add.text(X + PAD + 4, logY + 6, '📋 MESSAGE LOG', {
+      fontSize: '14px', color: '#a09060', fontFamily: 'monospace',
     });
 
-    // Log entries (upper portion)
-    const logAreaY = Y + 44;
-    const logAreaH = Math.floor(H * 0.48);
+    // Log entries
+    const logAreaY = logY + 38;
+    const logAreaH = logH - 46;
     this._logLines = [];
-    this._logClickAreas = [];  // Invisible click areas for each line
-    const lineH    = 22;
+    this._logClickAreas = [];
+    const lineH = 22;
     const maxLines = Math.floor(logAreaH / lineH);
     for (let i = 0; i < maxLines; i++) {
-      const line = s.add.text(X + PAD, logAreaY + i * lineH, '', {
+      const lineY = logAreaY + i * lineH;
+      const line = s.add.text(X + PAD, lineY, '', {
         fontSize: '13px', color: '#c8b070', fontFamily: 'monospace',
         wordWrap: { width: W - PAD * 2 },
       });
       this._logLines.push(line);
       
-      // Invisible click area for the entire line width
+      // Alternating row backgrounds for readability
+      if (i % 2 === 0) {
+        s.add.rectangle(X + W/2, lineY + 10, W - PAD*2 - 4, lineH - 2, 0x0e0c08, 0.5);
+      }
+      
+      // Invisible click area
       const clickArea = s.add.rectangle(
-        X + W/2, logAreaY + i * lineH + 10, W - PAD*2, lineH, 0x000000, 0
+        X + W/2, lineY + 10, W - PAD*2, lineH, 0x000000, 0
       ).setInteractive({ useHandCursor: true });
       clickArea.on('pointerover', () => line.setColor('#f0d080'));
       clickArea.on('pointerout', () => line.setColor('#c8b070'));
@@ -220,16 +232,47 @@ export class Logbook {
       this._logClickAreas.push(clickArea);
     }
     
-    // Create detail popup (hidden by default)
+    // Create detail popup
     this._createLogDetailPopup();
 
-    // Divider
-    const divY = Y + 44 + logAreaH + 4;
-    s.add.line(X + PAD, divY, W - PAD * 2, 0, 0x5a4a2a, 0.6).setLineWidth(1);
+    // === RECEIVE SECTION (Lower) ===
+    const receiveY = logY + logH + 8;
+    const receiveH = H - logH - 8;
+    
+    // Receive section background
+    s.add.rectangle(X + W / 2, receiveY + receiveH / 2, W, receiveH, 0x0e0c08, 0.55)
+      .setStrokeStyle(2, 0x3a5a7a);
 
-    const A = divY + 8; // decode-area top
+    // Receive section inner background (slightly lighter, bluish tint)
+    s.add.rectangle(X + W / 2, receiveY + 28 + (receiveH - 36) / 2, W - 4, receiveH - 36, 0x0a1218, 0.48);
+
+    // Receive header bar
+    s.add.rectangle(X + W / 2, receiveY + 16, W - 4, 28, 0x1a2530, 0.72)
+      .setStrokeStyle(1, 0x3a5a7a);
+    this._sectionHeader = s.add.text(X + PAD + 4, receiveY + 6, '📡 RECEIVE / DECODE', {
+      fontSize: '14px', color: '#7aa0c0', fontFamily: 'monospace',
+    });
+
+    // Send button in header bar (right side)
+    this._submitBtn = s.add.text(X + W - PAD - 4, receiveY + 6, 'SEND ▶', {
+      fontSize: '14px', color: '#00ff88', fontFamily: 'monospace',
+      backgroundColor: '#0a3a1a', padding: { x: 10, y: 3 },
+    }).setOrigin(1, 0).setDepth(15).setInteractive({ useHandCursor: true }).setVisible(false);
+    this._submitBtn.on('pointerup', () => {
+      if (this._mode === 'decoding')    this._submitDecode();
+      else if (this._mode === 'transmitting') this._submitTransmit();
+    });
+
+    // Store section colors for mode switching
+    this._receiveColor = '#7aa0c0';
+    this._transmitColor = '#c9a050';
+    
+    // Active message area top (relative to receive section)
+    const A = receiveY + 36;
 
     // ── Shared elements (decode + transmit) — depth 15 to render above FreqDial
+    // Using updated R constants for new two-section layout
+    
     this._modeLabel = s.add.text(X + PAD, A + R.label, '', {
       fontSize: '13px', color: '#556688', fontFamily: 'monospace',
     }).setDepth(15).setVisible(false);
@@ -262,15 +305,7 @@ export class Logbook {
       fontSize: '14px', color: '#556688', fontFamily: 'monospace',
     }).setDepth(15).setVisible(false);
 
-    // Submit button (touch-friendly, replaces ENTER key)
-    this._submitBtn = s.add.text(X + W - PAD, A + R.typed, 'SEND ▶', {
-      fontSize: '13px', color: '#00ff88', fontFamily: 'monospace',
-      backgroundColor: '#0a2a1a', padding: { x: 8, y: 4 },
-    }).setOrigin(1, 0).setDepth(15).setInteractive({ useHandCursor: true }).setVisible(false);
-    this._submitBtn.on('pointerup', () => {
-      if (this._mode === 'decoding')    this._submitDecode();
-      else if (this._mode === 'transmitting') this._submitTransmit();
-    });
+
 
     // ── Choice buttons (touch decode) ──────────────────────────────────────────
     // Positioned at the telegraph key location (right side of screen)
@@ -664,6 +699,9 @@ export class Logbook {
     this._txKeyed   = '';
     this._mode      = 'transmitting';
 
+    // Update section header to transmit mode
+    this._sectionHeader.setText('📻 TRANSMIT / ENCODE').setColor(this._transmitColor);
+
     // Re-enable telegraph key (was disabled during decoding)
     this.scene.telegraphKey?._enableSpace?.();
 
@@ -690,6 +728,10 @@ export class Logbook {
         this._refreshInput();
       };
       morse.onWordDecoded = () => {
+        this._txKeyed = morse.inputState.decodedText;
+        this._refreshInput();
+      };
+      morse.onCorrectionSignal = () => {
         this._txKeyed = morse.inputState.decodedText;
         this._refreshInput();
       };
@@ -743,6 +785,18 @@ export class Logbook {
       this._activeMsg.id, this._txKeyed, playerTimings
     );
 
+    this.addEntry(
+      this.scene.timeSystem?.getFormattedTime() ?? '--:--',
+      'MPB',
+      morse?.inputState?.decodedText || this._txKeyed || this._txTarget,
+      'TX',
+      {
+        sender:   { callsign: 'MPB', shipName: 'SS Pemberton' },
+        receiver: this._activeMsg?.sender,
+        accuracy: txScore,
+      }
+    );
+
     setTimeout(() => this._reset(), 2000);
   }
 
@@ -757,6 +811,9 @@ export class Logbook {
     this._hiddenInput.blur();
     this._setChoiceVisible(false);
     this._showTelegraphKey();  // show telegraph key again
+    this.scene.timeSystem?.setRealTime(false);  // restore normal time scale
+    // Reset section header to receive mode
+    this._sectionHeader?.setText('📡 RECEIVE / DECODE').setColor(this._receiveColor);
     this._refreshAll();
   }
 

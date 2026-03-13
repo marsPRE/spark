@@ -1,7 +1,7 @@
 /**
  * HUD — status info + action buttons.
- * Top bar: informational only (no interactive elements).
- * Bottom-right: MENU, PAUSE, MORSE REF, SEA CHART buttons.
+ * Top bar: info + action buttons (MENU, CHART, REF, PAUSE, 2X).
+ * Bottom: status strip only.
  */
 export class HUD {
   constructor(scene) {
@@ -15,7 +15,7 @@ export class HUD {
     const sc = this.scene;
 
     // ── Top bar ───────────────────────────────────────────────────────────────
-    sc.add.rectangle(w / 2, 22, w, 44, 0x080818)
+    sc.add.rectangle(w / 2, 22, w, 44, 0x080818, 0.85)
       .setStrokeStyle(1, 0x223355).setDepth(30);
 
     this._titleText = sc.add.text(16, 6, 'SPARKS', {
@@ -26,41 +26,38 @@ export class HUD {
       fontSize: '20px', color: '#aaccff', fontFamily: 'monospace',
     }).setDepth(31);
 
-    this._watchText = sc.add.text(380, 10, 'Forenoon Watch', {
+    this._watchText = sc.add.text(320, 10, 'Forenoon Watch', {
       fontSize: '14px', color: '#445566', fontFamily: 'monospace',
     }).setDepth(31);
 
-    this._weatherText = sc.add.text(580, 10, 'Clear', {
+    this._weatherText = sc.add.text(480, 10, 'Clear', {
       fontSize: '14px', color: '#55aa55', fontFamily: 'monospace',
     }).setDepth(31);
 
-    this._repText = sc.add.text(680, 10, 'Rep: 50', {
+    this._repText = sc.add.text(560, 10, 'Rep: 50', {
       fontSize: '14px', color: '#99aa77', fontFamily: 'monospace',
     }).setDepth(31);
 
-    // Signal alert (centre of top bar)
-    this._signalAlert = sc.add.text(w / 2, 6, '', {
+    // Signal alert (centre-left of top bar, moved to make room for bigger buttons)
+    this._signalAlert = sc.add.text(w / 2 - 200, 6, '', {
       fontSize: '16px', color: '#ff5555', fontFamily: 'monospace',
       backgroundColor: '#330000', padding: { x: 12, y: 4 },
     }).setOrigin(0.5, 0).setVisible(false).setDepth(32);
 
-    // ── Bottom status strip ───────────────────────────────────────────────────
-    sc.add.rectangle(w / 2, h - 16, w, 32, 0x080818)
-      .setStrokeStyle(1, 0x223355).setDepth(30);
-
-    this._statusText = sc.add.text(18, h - 27, 'Ready', {
-      fontSize: '14px', color: '#445566', fontFamily: 'monospace',
-    }).setDepth(31);
-
-    // ── Action buttons — single row of 4, right panel ────────────────────────
-    const BY = 578;   // single row, bottom edge at ~620 (safe zone)
+    // ── Action buttons — top bar right side ───────────────────────────────────
     const btnBase = {
-      fontSize: '15px', fontFamily: 'monospace',
-      padding: { x: 14, y: 10 },
+      fontSize: '18px', fontFamily: 'monospace',
+      padding: { x: 12, y: 6 },
     };
 
+    // 4 buttons spread evenly from x=750 with 120px spacing (no CHART button anymore)
+    const BX_START = 750;
+    const BX_GAP   = 120;
+    const bx = (i) => BX_START + i * BX_GAP;
+    const BY = 2;  // Top bar position (slightly higher for bigger buttons)
+
     // 1: MENU
-    const settingsBtn = sc.add.text(660, BY, '⚙ MENU', {
+    const settingsBtn = sc.add.text(bx(0), BY, '⚙ MENU', {
       ...btnBase, color: '#ffdd88', backgroundColor: '#261500',
     }).setInteractive({ useHandCursor: true }).setDepth(32);
     settingsBtn.on('pointerover', () => settingsBtn.setColor('#ffffff'));
@@ -70,21 +67,8 @@ export class HUD {
       sc.settingsPanel._visible ? sc.settingsPanel.hide() : sc.settingsPanel.show();
     });
 
-    // 2: SEA CHART
-    const chartBtn = sc.add.text(810, BY, '⬡ CHART', {
-      ...btnBase, color: '#88ccff', backgroundColor: '#001828',
-    }).setInteractive({ useHandCursor: true }).setDepth(32);
-    chartBtn.on('pointerover', () => chartBtn.setColor('#ffffff'));
-    chartBtn.on('pointerout',  () => {
-      if (!sc.seaChart?._visible) chartBtn.setColor('#88ccff');
-    });
-    chartBtn.on('pointerup', () => {
-      const isVisible = sc.seaChart?.toggle();
-      chartBtn.setColor(isVisible ? '#ffff88' : '#88ccff');
-    });
-
-    // 3: MORSE REF
-    const morseRefBtn = sc.add.text(960, BY, '· — REF', {
+    // 2: MORSE REF
+    const morseRefBtn = sc.add.text(bx(1), BY, '·— REF', {
       ...btnBase, color: '#aabbcc', backgroundColor: '#0c1420',
     }).setInteractive({ useHandCursor: true }).setDepth(32);
     morseRefBtn.on('pointerover', () => morseRefBtn.setColor('#ffffff'));
@@ -94,8 +78,8 @@ export class HUD {
       sc.morseReference._visible ? sc.morseReference.hide() : sc.morseReference.show();
     });
 
-    // 4: PAUSE
-    const pauseBtn = sc.add.text(1110, BY, '❚❚ PAUSE', {
+    // 3: PAUSE
+    const pauseBtn = sc.add.text(bx(2), BY, '❚❚ PAUSE', {
       ...btnBase, color: '#99aabb', backgroundColor: '#0a1020',
     }).setInteractive({ useHandCursor: true }).setDepth(32);
     pauseBtn.on('pointerup', () => {
@@ -103,7 +87,26 @@ export class HUD {
       sc.scene.launch('PauseScene');
     });
 
-    this._chartBtn = chartBtn;
+    // 4: FAST FORWARD 2X
+    let _ff = false;
+    const ffBtn = sc.add.text(bx(3), BY, '▶▶ 2X', {
+      ...btnBase, color: '#667788', backgroundColor: '#0a1020',
+    }).setInteractive({ useHandCursor: true }).setDepth(32);
+    ffBtn.on('pointerup', () => {
+      _ff = !_ff;
+      sc.timeSystem?.setFastForward(_ff);
+      ffBtn.setColor(_ff ? '#ffff44' : '#667788');
+    });
+
+    this._ffBtn = ffBtn;
+
+    // ── Bottom status strip ───────────────────────────────────────────────────
+    sc.add.rectangle(w / 2, h - 16, w, 32, 0x080818)
+      .setStrokeStyle(1, 0x223355).setDepth(30);
+
+    this._statusText = sc.add.text(18, h - 27, 'Ready', {
+      fontSize: '14px', color: '#445566', fontFamily: 'monospace',
+    }).setDepth(31);
   }
 
   update(delta) {

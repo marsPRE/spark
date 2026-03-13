@@ -264,12 +264,8 @@ export class SettingsPanel {
   // ─── Toggle ──────────────────────────────────────────────────────────────────
 
   _setupToggle() {
-    // Only bind S key in game mode, not menu mode
-    if (!this._isMenuMode) {
-      this.scene.input.keyboard.on('keydown-S', () => {
-        this._visible ? this.hide() : this.show();
-      });
-    }
+    // Keyboard toggle removed — was interfering with message typing
+    // Use MENU button in top bar instead
   }
 
   show() { 
