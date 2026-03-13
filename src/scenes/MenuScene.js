@@ -112,6 +112,14 @@ export class MenuScene extends Phaser.Scene {
     
     // Credits container (hidden by default)
     this._creditsContainer = null;
+    
+    // Privacy notice - local storage only
+    this.add.text(width / 2, height - 20, 'Save games are stored locally on your device only', {
+      fontSize: '11px',
+      color: '#667788',
+      fontFamily: 'monospace',
+      fontStyle: 'italic'
+    }).setOrigin(0.5).setAlpha(0.8);
   }
 
   _showSettings() {
