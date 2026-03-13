@@ -118,7 +118,99 @@
       "time_limit": 180
     }
   ],
-  "narrative_events": [],
+  "narrative_events": [
+    {
+      "id": "tut_welcome",
+      "trigger_type": "time",
+      "trigger_time": 480,
+      "type": "dialog",
+      "dialog": {
+        "speaker": "Chief Radio Officer",
+        "lines": [
+          "Welcome aboard Pemberton, lad. I'm your Chief — here to show you the ropes.",
+          "This is your radio room. The brass key bottom-right is your voice to the world. The porthole shows the sea. The chart top-left tracks our position."
+        ]
+      }
+    },
+    {
+      "id": "tut_decode",
+      "trigger_type": "time",
+      "trigger_time": 480,
+      "type": "dialog",
+      "dialog": {
+        "speaker": "Chief Radio Officer",
+        "lines": [
+          "When a signal comes in, you'll hear Morse code. Four letter buttons will appear — pick the one you think matches what you heard.",
+          "You can also type directly on your KEYBOARD. The message repeats — don't rush. Just focus on one letter at a time. Hit REF in the top bar for the Morse alphabet."
+        ]
+      }
+    },
+    {
+      "id": "tut_transmit",
+      "trigger_type": "time",
+      "trigger_time": 480,
+      "type": "dialog",
+      "dialog": {
+        "speaker": "Chief Radio Officer",
+        "lines": [
+          "After decoding, you'll sometimes need to REPLY. The correct response appears on screen — you key it in Morse yourself.",
+          "SPACEBAR or tap the telegraph key: short = DOT, long hold = DASH. Press ENTER when done. The game scores your timing quality."
+        ]
+      }
+    },
+    {
+      "id": "tut_settings",
+      "trigger_type": "time",
+      "trigger_time": 480,
+      "type": "dialog",
+      "dialog": {
+        "speaker": "Chief Radio Officer",
+        "lines": [
+          "One last thing before the signal comes — hit MENU to open Settings. You can slow the Morse speed (WPM) there.",
+          "Farnsworth spacing adds extra pauses between letters while keeping each letter's pattern at full speed. Useful when starting out. Now — listen up. Liverpool is calling."
+        ]
+      }
+    },
+    {
+      "id": "tut_background",
+      "trigger_type": "time",
+      "trigger_time": 506,
+      "type": "dialog",
+      "dialog": {
+        "speaker": "Chief Radio Officer",
+        "lines": [
+          "Not every signal is for us. You'll hear other ships and coast stations exchanging traffic — listen in.",
+          "Every message you log builds your picture of what's happening at sea. A good Sparks misses nothing."
+        ]
+      }
+    },
+    {
+      "id": "tut_chart_time",
+      "trigger_type": "time",
+      "trigger_time": 522,
+      "type": "dialog",
+      "dialog": {
+        "speaker": "Chief Radio Officer",
+        "lines": [
+          "See the chart top-left? The green dot is us, moving toward Cork. Click it for a detailed view.",
+          "Time runs fast aboard — hours pass in minutes. Use the 4X button to skip quiet stretches. When a signal arrives, time drops to real speed automatically."
+        ]
+      }
+    },
+    {
+      "id": "tut_signoff",
+      "trigger_type": "time",
+      "trigger_time": 540,
+      "type": "dialog",
+      "dialog": {
+        "speaker": "Chief Radio Officer",
+        "lines": [
+          "That's the basics, Sparks. Keep your ears sharp and your key steady.",
+          "Tomorrow we sail for New York — seven days across the Atlantic. You'll be ready. Good luck — 73!"
+        ]
+      }
+    }
+  ],
   "scoring": {
     "par_score": 100,
     "gold_threshold": 200,

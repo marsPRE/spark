@@ -2,8 +2,8 @@
  * NarrativeDialog — full modal for captain/officer dialogs.
  * Pauses game time while visible; queues multiple dialogs.
  */
-const DLG_W = 720;
-const DLG_H = 240;
+const DLG_W = 860;
+const DLG_H = 280;
 const DEPTH  = 150;
 
 export class NarrativeDialog {
@@ -84,7 +84,7 @@ export class NarrativeDialog {
 
     // Body text
     this._bodyText = s.add.text(0, -10, '', {
-      fontSize: '20px', color: '#e8dcc0', fontFamily: 'monospace',
+      fontSize: '16px', color: '#e8dcc0', fontFamily: 'monospace',
       wordWrap: { width: DLG_W - 80 }, align: 'center',
       lineSpacing: 6,
     }).setOrigin(0.5, 0.5);
