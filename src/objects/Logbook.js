@@ -12,11 +12,12 @@
 
 import { DEFAULT_SETTINGS } from '../systems/SettingsSystem.js';
 
-const X   = 650;
-const Y   = 44;
-const W   = 380;
-const H   = 370;
-const PAD = 14;
+const X        = 650;
+const Y        = 44;    // Message log: top
+const DECODE_Y = 518;   // Decode panel: bottom (above bottom HUD strip)
+const W        = 380;
+const H        = 370;
+const PAD      = 14;
 
 // Y positions relative to the decode-area top (Receive section)
 const R = {
@@ -235,9 +236,9 @@ export class Logbook {
     // Create detail popup
     this._createLogDetailPopup();
 
-    // === RECEIVE SECTION (Lower) ===
-    const receiveY = logY + logH + 8;
-    const receiveH = H - logH - 8;
+    // === RECEIVE SECTION (Bottom) ===
+    const receiveY = DECODE_Y;
+    const receiveH = 688 - DECODE_Y;
     
     // Receive section background
     s.add.rectangle(X + W / 2, receiveY + receiveH / 2, W, receiveH, 0x0e0c08, 0.55)
@@ -296,10 +297,10 @@ export class Logbook {
       wordWrap: { width: W - PAD * 2 },
     }).setDepth(15).setVisible(false);
 
-    this._resultText = s.add.text(X + PAD, A + R.result, '', {
-      fontSize: '16px', fontFamily: 'monospace',
-      wordWrap: { width: W - PAD * 2 },
-    }).setDepth(15).setVisible(false);
+    // Result shown in header bar (right side, where SEND button is — they never overlap)
+    this._resultText = s.add.text(X + W - PAD - 4, receiveY + 6, '', {
+      fontSize: '13px', fontFamily: 'monospace',
+    }).setOrigin(1, 0).setDepth(16).setVisible(false);
 
     this._hintText = s.add.text(X + PAD, A + R.hint, '', {
       fontSize: '14px', color: '#556688', fontFamily: 'monospace',
@@ -313,14 +314,15 @@ export class Logbook {
     this._choiceBtns = [];
     const btnW = 172, btnH = 92, btnGap = 12;  // 10% larger + more gap
     // Center around the telegraph key position (1190, 280)
-    const keyCx = 1190, keyCy = 280;
+    const keyCx = 1085, keyCy = 280;
 
-    // 4 choice buttons stacked vertically
+    // 4 choice buttons in 2x2 grid at the lower two button heights
+    const colOff = btnW / 2 + btnGap / 2;
     const btnPositions = [
-      { x: keyCx, y: keyCy - 125 },  // top
-      { x: keyCx, y: keyCy - 30 },   // upper-middle
-      { x: keyCx, y: keyCy + 65 },   // lower-middle
-      { x: keyCx, y: keyCy + 160 },  // bottom
+      { x: keyCx - colOff, y: keyCy + 65 },   // top-left
+      { x: keyCx + colOff, y: keyCy + 65 },   // top-right
+      { x: keyCx - colOff, y: keyCy + 160 },  // bottom-left
+      { x: keyCx + colOff, y: keyCy + 160 },  // bottom-right
     ];
 
     for (let i = 0; i < 4; i++) {
@@ -698,6 +700,8 @@ export class Logbook {
     this._txTarget  = suggested;
     this._txKeyed   = '';
     this._mode      = 'transmitting';
+    this.scene.timeSystem?.setRealTime(true);   // pause to 1x during TX
+    this.scene.hud?.resetFastForward?.();
 
     // Update section header to transmit mode
     this._sectionHeader.setText('📻 TRANSMIT / ENCODE').setColor(this._transmitColor);

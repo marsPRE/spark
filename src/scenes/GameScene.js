@@ -125,11 +125,6 @@ export class GameScene extends Phaser.Scene {
     // Sea view (upper half — built before workspace so it draws behind)
     this.seaView = new SeaView(this);
 
-    // Vertical separator — left half (porthole) | right half (workspace)
-    const sep = this.add.graphics().setDepth(10);
-    sep.fillStyle(0x3a2a10);
-    sep.fillRect(638, 36, 6, 656);
-    this.add.rectangle(641, 364, 1, 656, 0x7a5820).setDepth(11);
 
     // UI objects
     this.telegraphKey = new TelegraphKey(this, this.morseEngine, this.audioEngine);
@@ -156,6 +151,8 @@ export class GameScene extends Phaser.Scene {
       this.logbook.startDecodeInput(msg);
     };
     this.messageSystem.onTransmissionEnded = (msg) => {
+      this.timeSystem.setRealTime(false);  // resume normal time scale
+      this.hud.resetFastForward();         // back to 1x after any signal
       this.hud.clearIncomingSignal();
     };
 

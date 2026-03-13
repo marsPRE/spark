@@ -25,7 +25,15 @@
       "Bash(ls ~/.claude/projects/ 2>/dev/null && ls -la ~/.claude/projects/*/ 2>/dev/null)",
       "Bash(claude mcp:*)",
       "Bash(npm pack:*)",
-      "Bash(MOONSHOT_API_KEY=test timeout 3 node /home/spark/mcp-kimi/index.mjs; echo \"exit:$?\")"
+      "Bash(MOONSHOT_API_KEY=test timeout 3 node /home/spark/mcp-kimi/index.mjs; echo \"exit:$?\")",
+      "Bash(nvm use:*)",
+      "Read(//usr/local/bin/**)",
+      "Read(//home/mspree/.nvm/versions/**)",
+      "Read(//usr/local/nvm/versions/**)",
+      "Read(//usr/**)",
+      "Read(//home/**)",
+      "Bash(cat /home/mspree/.claude.json | python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('mcpServers',{}\\), indent=2\\)\\)\" 2>/dev/null | grep -A5 kimi)",
+      "Bash(curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - 2>&1 | tail -5 && sudo apt-get install -y nodejs 2>&1 | tail -5)"
     ]
   }
 }

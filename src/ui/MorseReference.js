@@ -42,10 +42,20 @@ export class MorseReference {
     this._container.add(bg);
 
     // Title
-    const title = s.add.text(W / 2, 10, 'MORSE REFERENCE  (M to close)', {
+    const title = s.add.text(W / 2, 10, 'MORSE REFERENCE', {
       fontSize: '12px', color: '#556688', fontFamily: 'monospace',
     }).setOrigin(0.5, 0);
     this._container.add(title);
+
+    // Close button
+    const closeBtn = s.add.text(W - 10, 6, '✕', {
+      fontSize: '14px', color: '#ff6666', fontFamily: 'monospace',
+      backgroundColor: '#220000', padding: { x: 6, y: 3 },
+    }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
+    closeBtn.on('pointerup', () => this.hide());
+    closeBtn.on('pointerover', () => closeBtn.setColor('#ffffff'));
+    closeBtn.on('pointerout',  () => closeBtn.setColor('#ff6666'));
+    this._container.add(closeBtn);
 
     // Characters
     const cols = 4;
@@ -70,10 +80,7 @@ export class MorseReference {
   }
 
   _setupToggle() {
-    this.scene.input.keyboard.on('keydown-M', () => {
-      this._visible = !this._visible;
-      this._container.setVisible(this._visible);
-    });
+    // No keyboard shortcut — use the REF button in HUD or the ✕ close button
   }
 
   show() { this._visible = true;  this._container.setVisible(true);  }

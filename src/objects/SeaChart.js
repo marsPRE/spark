@@ -5,10 +5,10 @@
  */
 
 // Small chart (permanent widget)
-const CHART_X = 650;
-const CHART_Y = 422;
-const CHART_W = 380;
-const CHART_H = 220;
+const CHART_X = 8;
+const CHART_Y = 42;
+const CHART_W = 285;
+const CHART_H = 165;
 
 // Large chart overlay (when clicked)
 const OVERLAY_X = 30;

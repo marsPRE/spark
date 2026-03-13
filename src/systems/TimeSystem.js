@@ -52,7 +52,7 @@ export class TimeSystem {
     if (this._realTime) {
       scale = 1;  // 1:1 real-time during message interaction
     } else {
-      scale = this._fastForward ? this.timeScale * 2 : this.timeScale;
+      scale = this._fastForward ? this.timeScale * 4 : this.timeScale;
     }
     this.gameMinutes += (realDeltaMs / 60000) * scale;
     this.day = Math.floor(this.gameMinutes / 1440) + 1;
@@ -95,13 +95,33 @@ export class TimeSystem {
 
   _updatePosition() {
     if (!this.route) return;
-    const progress = Math.min(
-      1,
-      this.gameMinutes / (this.totalDays * 1440)
-    );
-    const dep = this.route.departure.position;
-    const arr = this.route.arrival.position;
-    this.currentPosition.lat = dep.lat + (arr.lat - dep.lat) * progress;
-    this.currentPosition.lon = dep.lon + (arr.lon - dep.lon) * progress;
+    const progress = Math.min(1, this.gameMinutes / (this.totalDays * 1440));
+
+    // Build full list of route points including waypoints
+    const pts = [
+      this.route.departure.position,
+      ...(this.route.waypoints || []).map(w => w.position),
+      this.route.arrival.position,
+    ];
+
+    // Cumulative distances (simple Euclidean in degrees — fine for interpolation)
+    const dists = [0];
+    for (let i = 1; i < pts.length; i++) {
+      const dlat = pts[i].lat - pts[i-1].lat;
+      const dlon = pts[i].lon - pts[i-1].lon;
+      dists.push(dists[i-1] + Math.sqrt(dlat*dlat + dlon*dlon));
+    }
+    const totalDist = dists[dists.length - 1];
+    const target    = progress * totalDist;
+
+    for (let i = 1; i < pts.length; i++) {
+      if (target <= dists[i] || i === pts.length - 1) {
+        const segLen = dists[i] - dists[i-1];
+        const t = segLen > 0 ? (target - dists[i-1]) / segLen : 0;
+        this.currentPosition.lat = pts[i-1].lat + (pts[i].lat - pts[i-1].lat) * t;
+        this.currentPosition.lon = pts[i-1].lon + (pts[i].lon - pts[i-1].lon) * t;
+        return;
+      }
+    }
   }
 }

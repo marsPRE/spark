@@ -10,15 +10,15 @@
 export const SEA_Y  = 36;    // top of usable area (below HUD)
 export const SEA_H  = 656;   // full usable height (36 → 692)
 export const SEA_W  = 640;   // left half of screen
-export const SEA_CX = 304;   // porthole centre X  (left side, 5% right)
-export const SEA_CY = 364;   // porthole centre Y  (centre between HUD bars)
-export const SEA_R  = 300;   // porthole radius  (fills left half)
+export const SEA_CX = 335;   // porthole centre X
+export const SEA_CY = 355;   // porthole centre Y
+export const SEA_R  = 130;   // porthole radius
 
 // Sky palette per time-of-day  { top, horizon }
 const SKY = {
   night: { top: 0x060614, hor: 0x0d1030 },
   dawn:  { top: 0x1a1040, hor: 0xb85830 },
-  day:   { top: 0x0a3a7a, hor: 0x2878a8 },
+  day:   { top: 0x2060b0, hor: 0x60a8d8 },
   dusk:  { top: 0x1a1040, hor: 0xb04818 },
 };
 
@@ -43,7 +43,10 @@ export class SeaView {
   // ─── Build ───────────────────────────────────────────────────────────────────
 
   _buildWall() {
-    // Wall background removed — radio_room_bg image handles this
+    // Solid backdrop so background image never bleeds through porthole
+    const g = this.scene.add.graphics().setDepth(-0.5);
+    g.fillStyle(0x060614);
+    g.fillCircle(SEA_CX, SEA_CY, SEA_R);
   }
 
   _buildLayers() {
@@ -68,6 +71,7 @@ export class SeaView {
     maskGfx.fillStyle(0xffffff);
     maskGfx.fillCircle(SEA_CX, SEA_CY, SEA_R);
     const mask = maskGfx.createGeometryMask();
+    maskGfx.setVisible(false); // mask graphics must not render visibly
 
     [this._sky, this._starGfx, this._celGfx, this._cloudGfx,
      this._waveFar, this._waveMid, this._waveNear,

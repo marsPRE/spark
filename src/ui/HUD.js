@@ -87,15 +87,15 @@ export class HUD {
       sc.scene.launch('PauseScene');
     });
 
-    // 4: FAST FORWARD 2X
-    let _ff = false;
-    const ffBtn = sc.add.text(bx(3), BY, '▶▶ 2X', {
+    // 4: FAST FORWARD 4X
+    this._ff = false;
+    const ffBtn = sc.add.text(bx(3), BY, '▶▶ 4X', {
       ...btnBase, color: '#667788', backgroundColor: '#0a1020',
     }).setInteractive({ useHandCursor: true }).setDepth(32);
     ffBtn.on('pointerup', () => {
-      _ff = !_ff;
-      sc.timeSystem?.setFastForward(_ff);
-      ffBtn.setColor(_ff ? '#ffff44' : '#667788');
+      this._ff = !this._ff;
+      sc.timeSystem?.setFastForward(this._ff);
+      ffBtn.setColor(this._ff ? '#ffff44' : '#667788');
     });
 
     this._ffBtn = ffBtn;
@@ -120,6 +120,13 @@ export class HUD {
     }
     if (ws) this._weatherText.setText(ws.current.condition.toUpperCase());
     if (ss) this._repText.setText(`Rep: ${ss.getReputation()}  ${ss.getReputationLabel()}`);
+  }
+
+  resetFastForward() {
+    if (!this._ff) return;
+    this._ff = false;
+    this.scene.timeSystem?.setFastForward(false);
+    this._ffBtn?.setColor('#667788');
   }
 
   showIncomingSignal(msg) {

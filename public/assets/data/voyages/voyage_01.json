@@ -14,7 +14,8 @@
       "departure": { "port": "Liverpool", "position": { "lat": 53.4, "lon": -3.0 } },
       "arrival":   { "port": "New York",  "position": { "lat": 40.7, "lon": -74.0 } },
       "waypoints": [
-        { "position": { "lat": 51.8, "lon": -8.3 },  "name": "Fastnet" },
+        { "position": { "lat": 52.0, "lon": -4.8 },  "name": "South Irish Sea" },
+        { "position": { "lat": 51.4, "lon": -9.6 },  "name": "Fastnet Rock" },
         { "position": { "lat": 47.5, "lon": -30.0 }, "name": "Mid-Atlantic" },
         { "position": { "lat": 46.6, "lon": -53.0 }, "name": "Cape Race" }
       ]
@@ -844,6 +845,141 @@
       "time_limit": 120
     },
     {
+      "id": "v01_tx_01",
+      "type": "ROUTINE",
+      "priority": 5,
+      "sender": {
+        "callsign": "GLD",
+        "shipName": "Seaforth Radio Liverpool",
+        "position": { "lat": 53.4, "lon": -3.0 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "MPB", "shipName": "SS Pemberton" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MPB DE GLD QRU MSG FOR CAPTAIN CONFIRM BERTH NR 4 SOUTHAMPTON K",
+        "decoded_meaning": "Seaforth Radio: confirm berth number 4 Southampton for Captain"
+      },
+      "timing": { "scheduled_time": 1800, "duration_seconds": 16, "wpm": 9, "repeats": 3 },
+      "signal": { "frequency": 500, "strength": 0.72, "noise_level": 0.12 },
+      "response_required": true,
+      "correct_responses": ["GLD DE MPB QSL BERTH NR 4 CONFIRMED K", "GLD DE MPB QSL K"],
+      "narrative_impact": {
+        "correct":   { "reputation": 4, "story_flag": "" },
+        "incorrect": { "reputation": -2, "story_flag": "" },
+        "timeout":   { "reputation": -3, "story_flag": "" }
+      },
+      "time_limit": 150
+    },
+    {
+      "id": "v01_tx_02",
+      "type": "ROUTINE",
+      "priority": 5,
+      "sender": {
+        "callsign": "WCC",
+        "shipName": "Chatham Radio",
+        "position": { "lat": 41.7, "lon": -70.0 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "MPB", "shipName": "SS Pemberton" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MPB DE WCC MSG NR 12 FOR PURSER = COAL BUNKERS READY SOUTHAMPTON = SHORE AGENT",
+        "decoded_meaning": "Chatham Radio: telegram for Purser, coal bunkers ready at Southampton"
+      },
+      "timing": { "scheduled_time": 3200, "duration_seconds": 20, "wpm": 9, "repeats": 3 },
+      "signal": { "frequency": 500, "strength": 0.55, "noise_level": 0.2 },
+      "response_required": true,
+      "correct_responses": ["WCC DE MPB QSL MSG NR 12 K"],
+      "narrative_impact": {
+        "correct":   { "reputation": 4, "story_flag": "" },
+        "incorrect": { "reputation": -2, "story_flag": "" },
+        "timeout":   { "reputation": -4, "story_flag": "" }
+      },
+      "time_limit": 150
+    },
+    {
+      "id": "v01_tx_03",
+      "type": "URGENCY",
+      "priority": 6,
+      "sender": {
+        "callsign": "MFA",
+        "shipName": "SS Falmouth",
+        "position": { "lat": 46.0, "lon": -28.0 },
+        "type": "merchant"
+      },
+      "receiver": { "callsign": "MPB", "shipName": "SS Pemberton" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MPB DE MFA XXX ENGINE TROUBLE QTH 46N 028W REQUEST POSITION NEAREST PORT K",
+        "decoded_meaning": "SS Falmouth: engine trouble, requests nearest port from Pemberton"
+      },
+      "timing": { "scheduled_time": 5800, "duration_seconds": 18, "wpm": 9, "repeats": 3 },
+      "signal": { "frequency": 500, "strength": 0.6, "noise_level": 0.22 },
+      "response_required": true,
+      "correct_responses": ["MFA DE MPB QTH AZORES 38N 028W PONTA DELGADA 200NM K", "MFA DE MPB AZORES NEAREST K"],
+      "narrative_impact": {
+        "correct":   { "reputation": 7, "story_flag": "" },
+        "incorrect": { "reputation": -3, "story_flag": "" },
+        "timeout":   { "reputation": -6, "story_flag": "" }
+      },
+      "time_limit": 180
+    },
+    {
+      "id": "v01_tx_04",
+      "type": "ROUTINE",
+      "priority": 5,
+      "sender": {
+        "callsign": "GCK",
+        "shipName": "Crookhaven Radio",
+        "position": { "lat": 51.6, "lon": -9.9 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "MPB", "shipName": "SS Pemberton" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MPB DE GCK QRU MSG NR 15 FOR DR HAYES = PATIENT CONDITION STABLE ARRIVE SOONEST = LONDON HOSPITAL",
+        "decoded_meaning": "Crookhaven Radio: urgent medical message for Dr Hayes — patient stable"
+      },
+      "timing": { "scheduled_time": 6900, "duration_seconds": 22, "wpm": 9, "repeats": 3 },
+      "signal": { "frequency": 500, "strength": 0.65, "noise_level": 0.14 },
+      "response_required": true,
+      "correct_responses": ["GCK DE MPB QSL MSG NR 15 K"],
+      "narrative_impact": {
+        "correct":   { "reputation": 5, "story_flag": "" },
+        "incorrect": { "reputation": -3, "story_flag": "" },
+        "timeout":   { "reputation": -4, "story_flag": "" }
+      },
+      "time_limit": 150
+    },
+    {
+      "id": "v01_tx_05",
+      "type": "ROUTINE",
+      "priority": 4,
+      "sender": {
+        "callsign": "MSH",
+        "shipName": "Sandy Hook Radio",
+        "position": { "lat": 40.5, "lon": -74.0 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "MPB", "shipName": "SS Pemberton" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MPB DE MSH QSA QRN CONFIRM POSITION AND ETA SOUTHAMPTON K",
+        "decoded_meaning": "Sandy Hook Radio: poor signal, confirm position and ETA Southampton"
+      },
+      "timing": { "scheduled_time": 8000, "duration_seconds": 14, "wpm": 10, "repeats": 2 },
+      "signal": { "frequency": 512, "strength": 0.5, "noise_level": 0.25 },
+      "response_required": true,
+      "correct_responses": ["MSH DE MPB QTH 50N 010W ETA SOUTHAMPTON 2 DAYS K", "MSH DE MPB ETA 2 DAYS K"],
+      "narrative_impact": {
+        "correct":   { "reputation": 4, "story_flag": "" },
+        "incorrect": { "reputation": -2, "story_flag": "" },
+        "timeout":   { "reputation": -3, "story_flag": "" }
+      },
+      "time_limit": 150
+    },
+    {
       "id": "v01_bg_01",
       "type": "NAVIGATION",
       "priority": 2,
@@ -962,6 +1098,210 @@
       "correct_responses": [],
       "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
       "time_limit": 0
+    },
+    {
+      "id": "v01_night_01",
+      "type": "ROUTINE",
+      "priority": 4,
+      "sender": {
+        "callsign": "WSL",
+        "shipName": "Sea Gate Radio New York",
+        "position": { "lat": 40.6, "lon": -74.1 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "ALL", "shipName": "All Stations" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "CQ CQ DE WSL QRN NIGHT SKED 500 KHZ AR",
+        "decoded_meaning": "Sea Gate Radio New York: night schedule on 500 kHz — signal carries far tonight"
+      },
+      "timing": { "scheduled_time": 1320, "duration_seconds": 12, "wpm": 11, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.65, "noise_level": 0.1 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": {
+        "correct":   { "reputation": 3, "story_flag": "night_propagation" },
+        "incorrect": { "reputation": 0, "story_flag": "" },
+        "timeout":   { "reputation": 0, "story_flag": "" }
+      },
+      "time_limit": 120
+    },
+    {
+      "id": "v01_night_02",
+      "type": "ROUTINE",
+      "priority": 4,
+      "sender": {
+        "callsign": "MCS",
+        "shipName": "SS Celtic Star",
+        "position": { "lat": 48.5, "lon": -22.0 },
+        "type": "passenger"
+      },
+      "receiver": { "callsign": "MPB", "shipName": "SS Pemberton" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MPB DE MCS MSG NR 7 FOR PEMBERTON CAPT = GOOD NIGHT SIGNALS CLEAR = CELTIC STAR",
+        "decoded_meaning": "Night passenger telegram — ionosphere bouncing signals clearly across the Atlantic"
+      },
+      "timing": { "scheduled_time": 1440, "duration_seconds": 16, "wpm": 9, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.72, "noise_level": 0.1 },
+      "response_required": true,
+      "correct_responses": ["MCS DE MPB QSL MSG NR 7 K", "MCS DE MPB QSL K"],
+      "narrative_impact": {
+        "correct":   { "reputation": 4, "story_flag": "" },
+        "incorrect": { "reputation": -2, "story_flag": "" },
+        "timeout":   { "reputation": -3, "story_flag": "" }
+      },
+      "time_limit": 150
+    },
+    {
+      "id": "v01_night_03",
+      "type": "NAVIGATION",
+      "priority": 3,
+      "is_background_traffic": true,
+      "sender": {
+        "callsign": "WSL",
+        "shipName": "Sea Gate Radio New York",
+        "position": { "lat": 40.6, "lon": -74.1 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "ALL", "shipName": "All Stations" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "CQ DE WSL WX NEW YORK CLEAR WIND NW 2 AR",
+        "decoded_meaning": "New York weather at midnight: clear, light northwest wind — ionospheric skip bringing this far"
+      },
+      "timing": { "scheduled_time": 1560, "duration_seconds": 10, "wpm": 11, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.6, "noise_level": 0.12 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
+      "time_limit": 0
+    },
+    {
+      "id": "v01_night_04",
+      "type": "ROUTINE",
+      "priority": 3,
+      "is_background_traffic": true,
+      "sender": {
+        "callsign": "MPA",
+        "shipName": "RMS Mauretania",
+        "position": { "lat": 51.0, "lon": -15.0 },
+        "type": "liner"
+      },
+      "receiver": { "callsign": "GLD", "shipName": "Seaforth Radio Liverpool" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "GLD DE MPA QTH 51N 015W 500 PAX ALL WELL ETA 0600 K",
+        "decoded_meaning": "Mauretania: 500 passengers, all well, ETA Liverpool 06:00"
+      },
+      "timing": { "scheduled_time": 1680, "duration_seconds": 12, "wpm": 12, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.68, "noise_level": 0.12 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
+      "time_limit": 0
+    },
+    {
+      "id": "v01_night_05",
+      "type": "ROUTINE",
+      "priority": 5,
+      "sender": {
+        "callsign": "GCK",
+        "shipName": "Crookhaven Radio",
+        "position": { "lat": 51.6, "lon": -9.9 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "MPB", "shipName": "SS Pemberton" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MPB DE GCK MSG NR 8 FOR STEWARD = PROVISIONS AT NY DOCK 12 CONFIRMED = CUNARD",
+        "decoded_meaning": "Telegram for Steward: provisioning at New York Dock 12 confirmed"
+      },
+      "timing": { "scheduled_time": 2760, "duration_seconds": 18, "wpm": 9, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.55, "noise_level": 0.18 },
+      "response_required": true,
+      "correct_responses": ["GCK DE MPB QSL MSG NR 8 K"],
+      "narrative_impact": {
+        "correct":   { "reputation": 4, "story_flag": "" },
+        "incorrect": { "reputation": -2, "story_flag": "" },
+        "timeout":   { "reputation": -4, "story_flag": "" }
+      },
+      "time_limit": 150
+    },
+    {
+      "id": "v01_night_06",
+      "type": "NAVIGATION",
+      "priority": 3,
+      "is_background_traffic": true,
+      "sender": {
+        "callsign": "WCC",
+        "shipName": "Chatham Radio",
+        "position": { "lat": 41.7, "lon": -70.0 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "ALL", "shipName": "All Stations" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "CQ DE WCC NIGHT QTC HEAVY TRAFFIC 500 K",
+        "decoded_meaning": "Chatham Radio: busy night schedule on 500 kHz, signals bouncing from Europe"
+      },
+      "timing": { "scheduled_time": 2880, "duration_seconds": 8, "wpm": 12, "repeats": 3 },
+      "signal": { "frequency": 500, "strength": 0.58, "noise_level": 0.15 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
+      "time_limit": 0
+    },
+    {
+      "id": "v01_night_07",
+      "type": "ROUTINE",
+      "priority": 5,
+      "sender": {
+        "callsign": "MBC",
+        "shipName": "SS Baltic",
+        "position": { "lat": 47.5, "lon": -32.0 },
+        "type": "liner"
+      },
+      "receiver": { "callsign": "MPB", "shipName": "SS Pemberton" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "MPB DE MBC MSG NR 9 FOR HARTLEY = LONDON OFFICE URGENT REPLY NEEDED = WILSON",
+        "decoded_meaning": "Urgent passenger telegram for Hartley via Baltic — night skip carrying signal"
+      },
+      "timing": { "scheduled_time": 4200, "duration_seconds": 18, "wpm": 10, "repeats": 2 },
+      "signal": { "frequency": 500, "strength": 0.48, "noise_level": 0.22 },
+      "response_required": true,
+      "correct_responses": ["MBC DE MPB QSL MSG NR 9 K"],
+      "narrative_impact": {
+        "correct":   { "reputation": 5, "story_flag": "" },
+        "incorrect": { "reputation": -2, "story_flag": "" },
+        "timeout":   { "reputation": -5, "story_flag": "" }
+      },
+      "time_limit": 150
+    },
+    {
+      "id": "v01_night_08",
+      "type": "NAVIGATION",
+      "priority": 3,
+      "is_background_traffic": true,
+      "sender": {
+        "callsign": "WSL",
+        "shipName": "Sea Gate Radio New York",
+        "position": { "lat": 40.6, "lon": -74.1 },
+        "type": "coast_station"
+      },
+      "receiver": { "callsign": "ALL", "shipName": "All Stations" },
+      "content": {
+        "raw_morse": "",
+        "plain_text": "CQ CQ DE WSL QST ICE REPORTS 43N 049W TO 45N 052W AR",
+        "decoded_meaning": "Sea Gate Radio New York broadcast: ice field reports 43-45N, 49-52W"
+      },
+      "timing": { "scheduled_time": 4320, "duration_seconds": 12, "wpm": 11, "repeats": 3 },
+      "signal": { "frequency": 500, "strength": 0.55, "noise_level": 0.18 },
+      "response_required": false,
+      "correct_responses": [],
+      "narrative_impact": { "correct": {}, "incorrect": {}, "timeout": {} },
+      "time_limit": 0
     }
   ],
   "narrative_events": [
@@ -975,6 +1315,20 @@
         "lines": [
           "Welcome aboard Pemberton, Sparks. We are bound for New York, 7 days across the Atlantic.",
           "Keep a sharp ear on 500 kHz. Report anything unusual to the bridge."
+        ]
+      }
+    },
+    {
+      "id": "ne_night",
+      "trigger_type": "condition",
+      "condition": { "type": "flag", "flag": "night_propagation", "value": true },
+      "type": "dialog",
+      "dialog": {
+        "speaker": "Chief Officer",
+        "lines": [
+          "You hear that, Sparks? Stations from America — at this distance!",
+          "At night the signal bounces off the ionosphere. During the day we reach maybe 500 miles. Tonight we can hear 3000.",
+          "The Marconi men call it the night effect. Use it well."
         ]
       }
     },
