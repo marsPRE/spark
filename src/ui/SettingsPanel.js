@@ -181,6 +181,12 @@ export class SettingsPanel {
       closeBtn.on('pointerup',   () => this.hide());
       this._container.add(closeBtn);
     }
+    
+    // Privacy notice at bottom
+    const privacyText = s.add.text(W / 2, H - 12, 'Privacy: All data stored locally in your browser only', {
+      fontSize: '10px', color: '#667788', fontFamily: 'monospace', fontStyle: 'italic'
+    }).setOrigin(0.5);
+    this._container.add(privacyText);
 
     // Initialize pending settings with current values
     this._pendingSettings = { ...settings };

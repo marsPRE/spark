@@ -99,16 +99,25 @@ export class MenuScene extends Phaser.Scene {
     this._addButton(width / 2, yPos, 'SETTINGS', () => {
       this._showSettings();
     });
+    yPos += 45;
+    
+    // Credits button
+    this._addButton(width / 2, yPos, 'CREDITS', () => {
+      this._showCredits();
+    });
 
     // Create settings
     this.settings = {};
     this.settingsPanel = new SettingsPanel(this, null, true);
+    
+    // Credits container (hidden by default)
+    this._creditsContainer = null;
   }
 
   _showSettings() {
     // Hide menu buttons visually
     this.children.list.forEach(child => {
-      if (child.type === 'Text' && ['NEW VOYAGE', 'CONTINUE', 'TUTORIAL', 'SETTINGS'].includes(child.text)) {
+      if (child.type === 'Text' && ['NEW VOYAGE', 'CONTINUE', 'TUTORIAL', 'SETTINGS', 'CREDITS'].includes(child.text)) {
         child.setVisible(false);
       }
     });
@@ -120,7 +129,7 @@ export class MenuScene extends Phaser.Scene {
     const checkVisibility = () => {
       if (!this.settingsPanel._visible) {
         this.children.list.forEach(child => {
-          if (child.type === 'Text' && ['NEW VOYAGE', 'CONTINUE', 'TUTORIAL', 'SETTINGS'].includes(child.text)) {
+          if (child.type === 'Text' && ['NEW VOYAGE', 'CONTINUE', 'TUTORIAL', 'SETTINGS', 'CREDITS'].includes(child.text)) {
             child.setVisible(true);
           }
         });
@@ -129,6 +138,84 @@ export class MenuScene extends Phaser.Scene {
       }
     };
     this.time.delayedCall(100, checkVisibility);
+  }
+
+  _showCredits() {
+    const { width, height } = this.scale;
+    
+    // Hide menu buttons
+    this.children.list.forEach(child => {
+      if (child.type === 'Text' && ['NEW VOYAGE', 'CONTINUE', 'TUTORIAL', 'SETTINGS', 'CREDITS'].includes(child.text)) {
+        child.setVisible(false);
+      }
+    });
+    
+    // Create credits container
+    this._creditsContainer = this.add.container(width / 2, height / 2);
+    
+    // Background
+    const bg = this.add.rectangle(0, 0, 600, 400, 0x1a1a2e, 0.98)
+      .setStrokeStyle(2, 0x5a4a2a);
+    this._creditsContainer.add(bg);
+    
+    // Title
+    const title = this.add.text(0, -160, '⚡ CREDITS', {
+      fontSize: '28px', color: '#f0c040', fontFamily: 'monospace'
+    }).setOrigin(0.5);
+    this._creditsContainer.add(title);
+    
+    // Credits text
+    const creditsText = [
+      '',
+      'Built with Phaser 3 (MIT License)',
+      '© 2025 Richard Davey / Photon Storm Ltd.',
+      '',
+      'Visual Artwork:',
+      'AI-assisted generation with watermark',
+      '',
+      'Audio:',
+      'Synthesized in real-time using Web Audio API',
+      '',
+      'Map Data:',
+      '© OpenStreetMap contributors (ODbL)',
+      '',
+      'Historical Research:',
+      'Based on Guglielmo Marconi\'s wireless telegraphy',
+    ].join('\n');
+    
+    const text = this.add.text(0, -20, creditsText, {
+      fontSize: '14px', color: '#aabbcc', fontFamily: 'monospace',
+      align: 'center'
+    }).setOrigin(0.5);
+    this._creditsContainer.add(text);
+    
+    // Privacy note
+    const privacyText = 'Privacy: Game saves data locally in your browser only.';
+    const privacy = this.add.text(0, 140, privacyText, {
+      fontSize: '12px', color: '#8899aa', fontFamily: 'monospace',
+      fontStyle: 'italic'
+    }).setOrigin(0.5);
+    this._creditsContainer.add(privacy);
+    
+    // Close button
+    const closeBtn = this.add.text(0, 170, 'CLOSE', {
+      fontSize: '16px', color: '#ffffff', fontFamily: 'monospace',
+      backgroundColor: '#3a3a5c', padding: { x: 20, y: 8 }
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+    
+    closeBtn.on('pointerover', () => closeBtn.setBackgroundColor('#4a4a7c'));
+    closeBtn.on('pointerout', () => closeBtn.setBackgroundColor('#3a3a5c'));
+    closeBtn.on('pointerdown', () => {
+      this._creditsContainer.destroy();
+      this._creditsContainer = null;
+      this.children.list.forEach(child => {
+        if (child.type === 'Text' && ['NEW VOYAGE', 'CONTINUE', 'TUTORIAL', 'SETTINGS', 'CREDITS'].includes(child.text)) {
+          child.setVisible(true);
+        }
+      });
+    });
+    
+    this._creditsContainer.add(closeBtn);
   }
 
   _addButton(x, y, label, callback) {
