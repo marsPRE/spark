@@ -175,6 +175,8 @@ export class MenuScene extends Phaser.Scene {
     // Credits text
     const creditsText = [
       '',
+      'GitHub: github.com/marsPRE/spark',
+      '',
       'Built with Phaser 3 (MIT License)',
       '© 2025 Richard Davey / Photon Storm Ltd.',
       '',
